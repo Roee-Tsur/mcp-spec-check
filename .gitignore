@@ -5,3 +5,4 @@ dist/
 scan-results/
 .env
 CLAUDE.local.md
+PLAN.md
