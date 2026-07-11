@@ -1,0 +1,43 @@
+{
+  "name": "mcp-ready",
+  "version": "0.0.1",
+  "description": "Will your remote MCP server break on the 2026-07-28 spec release? Zero-install black-box probe.",
+  "type": "module",
+  "bin": {
+    "mcp-ready": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "spec",
+    "migration",
+    "readiness",
+    "cli",
+    "2026-07-28"
+  ],
+  "author": "Roee Tsur",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TODO-your-username/mcp-ready.git"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
