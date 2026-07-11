@@ -4,3 +4,4 @@ dist/
 .DS_Store
 scan-results/
 .env
+CLAUDE.local.md

@@ -9,7 +9,7 @@ Zero-install CLI (`npx mcp-ready <url>`) that black-box-probes a remote MCP serv
 - `npm test` — vitest
 - `npm run typecheck` — tsc --noEmit
 
-**Dev-env gotcha:** this machine's default node is v10 via nvm. Run EVERYTHING under Node 22 (`export PATH="$HOME/.nvm/versions/node/v22.22.2/bin:$PATH"` or `nvm use 22`), including `npm install`. A v10-era install produces broken node_modules (rollup optional-deps bug).
+Requires Node ≥20 (uses global fetch); develop and install under Node 22.
 
 ## Architecture
 
