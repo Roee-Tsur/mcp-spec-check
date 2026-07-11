@@ -38,13 +38,14 @@ npx mcp-ready <url> --bearer <token>          # sends Authorization: Bearer <tok
 npx mcp-ready <url> --header "X-Api-Key: k"   # any header; repeatable
 ```
 
-Without credentials, `mcp-ready` can classify an auth-walled server (and probe its
-OAuth protected-resource metadata) but can't grade it — checks report `skipped`
-and the exit code is 2 (couldn't test).
+Without credentials, `mcp-ready` can classify an auth-walled server but can't
+grade it — checks report `skipped` and the exit code is 2 (couldn't test). (The
+planned `auth-metadata` check will probe OAuth protected-resource metadata
+through the auth wall once implemented.)
 
 ### CI
 
-Exit codes are CI-friendly: `0` ready · `1` at least one failing check · `2` probe error.
+Exit codes are CI-friendly: `0` ready · `1` at least one failing check · `2` couldn't test (probe error, or endpoint auth-walled / unreachable / not MCP).
 
 ```yaml
 - run: npx mcp-ready ${{ env.MCP_SERVER_URL }}

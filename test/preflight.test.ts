@@ -79,6 +79,22 @@ describe("interpretInitialize", () => {
     expect(interpretInitialize(404, h(), undefined).access).toBe("not-mcp");
   });
 
+  it("429 without an envelope → unreachable (transient), never not-mcp", () => {
+    const p = interpretInitialize(429, h(), undefined);
+    expect(p.access).toBe("unreachable");
+    expect(p.detail).toContain("transient");
+  });
+
+  it("5xx without an envelope → unreachable (transient), never not-mcp", () => {
+    expect(interpretInitialize(500, h(), undefined).access).toBe("unreachable");
+    expect(interpretInitialize(502, h(), { some: "html" }).access).toBe("unreachable");
+    expect(interpretInitialize(503, h(), undefined).access).toBe("unreachable");
+  });
+
+  it("5xx carrying a JSON-RPC envelope still counts as open", () => {
+    expect(interpretInitialize(500, h(), rpcError(-32603)).access).toBe("open");
+  });
+
   it("405 → not-mcp", () => {
     expect(interpretInitialize(405, h(), undefined).access).toBe("not-mcp");
   });

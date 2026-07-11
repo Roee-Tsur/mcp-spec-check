@@ -11,20 +11,11 @@
  * not "broken".
  */
 
-import { postJsonRpc } from "./client.js";
+import { isJsonRpcResponse, postJsonRpc } from "./client.js";
 import type { Preflight, ProbeContext } from "./types.js";
 
-function isJsonRpcEnvelope(body: unknown): body is Record<string, unknown> {
-  return (
-    typeof body === "object" &&
-    body !== null &&
-    (body as { jsonrpc?: unknown }).jsonrpc === "2.0" &&
-    ("result" in body || "error" in body)
-  );
-}
-
 function protocolVersionOf(body: unknown): string | undefined {
-  if (!isJsonRpcEnvelope(body)) return undefined;
+  if (!isJsonRpcResponse(body)) return undefined;
   const result = body["result"];
   if (typeof result !== "object" || result === null) return undefined;
   const version = (result as { protocolVersion?: unknown }).protocolVersion;
@@ -36,6 +27,8 @@ function protocolVersionOf(body: unknown): string | undefined {
  *  - 401/403                                     → auth-required
  *  - 2xx + JSON-RPC result with protocolVersion  → open (baseline = that version)
  *  - any valid JSON-RPC envelope (incl. errors)  → open (it speaks JSON-RPC), no baseline
+ *  - 429/5xx without an envelope                 → unreachable (transient — never assert not-mcp
+ *                                                  off a rate limit or gateway error)
  *  - anything else (404/405/non-JSON-RPC body)   → not-mcp
  */
 export function interpretInitialize(httpStatus: number, headers: Headers, body: unknown): Preflight {
@@ -59,10 +52,17 @@ export function interpretInitialize(httpStatus: number, headers: Headers, body: 
     };
   }
 
-  if (isJsonRpcEnvelope(body)) {
+  if (isJsonRpcResponse(body)) {
     return {
       access: "open",
       detail: `answers JSON-RPC (HTTP ${httpStatus}) but revealed no protocolVersion`,
+    };
+  }
+
+  if (httpStatus === 429 || httpStatus >= 500) {
+    return {
+      access: "unreachable",
+      detail: `HTTP ${httpStatus} — transient (rate limit or server error), couldn't test`,
     };
   }
 

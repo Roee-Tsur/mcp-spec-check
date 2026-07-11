@@ -27,9 +27,36 @@ describe("parseSseJson", () => {
     expect(parseSseJson('data: {"a":\ndata: 1}\n\n')).toEqual({ a: 1 });
   });
 
-  it("returns the first event when several are present", () => {
+  it("returns the first event when several are present and none is a response", () => {
     const body = 'data: {"first":true}\n\ndata: {"second":true}\n\n';
     expect(parseSseJson(body)).toEqual({ first: true });
+  });
+
+  it("prefers a JSON-RPC response over a notification that precedes it", () => {
+    const body =
+      'data: {"jsonrpc":"2.0","method":"notifications/message","params":{}}\n\n' +
+      'data: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25"}}\n\n';
+    expect(parseSseJson(body)).toEqual({
+      jsonrpc: "2.0",
+      id: 1,
+      result: { protocolVersion: "2025-11-25" },
+    });
+  });
+
+  it("prefers a JSON-RPC error response over a preceding notification", () => {
+    const body =
+      'data: {"jsonrpc":"2.0","method":"notifications/message"}\n\n' +
+      'data: {"jsonrpc":"2.0","id":1,"error":{"code":-32601,"message":"x"}}\n\n';
+    expect(parseSseJson(body)).toEqual({
+      jsonrpc: "2.0",
+      id: 1,
+      error: { code: -32601, message: "x" },
+    });
+  });
+
+  it("ignores keepalive comment lines between events", () => {
+    const body = ': keepalive\n\ndata: {"jsonrpc":"2.0","id":1,"result":{}}\n\n: keepalive\n\n';
+    expect(parseSseJson(body)).toEqual({ jsonrpc: "2.0", id: 1, result: {} });
   });
 
   it("returns undefined when there is no data event", () => {

@@ -61,6 +61,9 @@ async function main(): Promise<void> {
   const preflight = await classifyEndpoint(ctx);
 
   let results: CheckResult[];
+  // TODO(M1): once auth-metadata is implemented it must still run in the
+  // non-open branch — its /.well-known probe is origin-level and works
+  // through auth walls (it's the one check that yields signal on 401 servers).
   if (preflight.access !== "open") {
     const detail =
       preflight.access === "auth-required"

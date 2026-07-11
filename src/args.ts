@@ -18,6 +18,12 @@ export interface ParsedArgs {
   error?: string;
 }
 
+// RFC 9110 token — what fetch's Headers will accept as a header name. Values
+// must not carry CR/LF/NUL. Rejecting these here turns a malformed --header
+// into a usage error instead of a bogus "access: unreachable" verdict.
+const HEADER_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+const BAD_HEADER_VALUE = /[\r\n\0]/;
+
 export function parseArgs(argv: string[]): ParsedArgs {
   const parsed: ParsedArgs = {
     timeoutMs: 15_000,
@@ -56,7 +62,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       }
       case "--bearer": {
         const token = argv[++i];
-        if (token === undefined) {
+        if (token === undefined || BAD_HEADER_VALUE.test(token)) {
           parsed.error = "--bearer expects a token";
           return parsed;
         }
@@ -71,11 +77,12 @@ export function parseArgs(argv: string[]): ParsedArgs {
         }
         const colon = raw.indexOf(":");
         const name = colon > 0 ? raw.slice(0, colon).trim() : "";
-        if (!name) {
+        const value = colon > 0 ? raw.slice(colon + 1).trim() : "";
+        if (!HEADER_NAME.test(name) || BAD_HEADER_VALUE.test(value)) {
           parsed.error = `invalid --header "${raw}" — expected "Name: value"`;
           return parsed;
         }
-        parsed.headers[name] = raw.slice(colon + 1).trim();
+        parsed.headers[name] = value;
         break;
       }
       default:

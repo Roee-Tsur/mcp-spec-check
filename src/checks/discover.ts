@@ -17,7 +17,7 @@ export const discover: CheckDefinition = {
   async run(ctx) {
     const res = await postJsonRpc(ctx.url, "server/discover", {}, {
       timeoutMs: ctx.timeoutMs,
-      headers: { "Mcp-Method": "server/discover" },
+      headers: { ...ctx.headers, "Mcp-Method": "server/discover" },
     });
     const code = rpcErrorCode(res.body);
     if (code === -32601) {

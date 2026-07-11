@@ -66,6 +66,23 @@ describe("parseArgs", () => {
     expect(parseArgs(["--header", ": value-without-name"]).error).toMatch(/invalid --header/);
   });
 
+  it("errors on an invalid header name instead of probing with it", () => {
+    // "X Api Key" would make fetch's Headers constructor throw, which the
+    // preflight would misreport as the server being unreachable
+    expect(parseArgs(["--header", "X Api Key: v"]).error).toMatch(/invalid --header/);
+  });
+
+  it("trims whitespace around header names and values", () => {
+    expect(parseArgs(["--header", "X-Key : v ", "https://a.com"]).headers).toEqual({
+      "X-Key": "v",
+    });
+  });
+
+  it("errors on header values and bearer tokens with CR/LF", () => {
+    expect(parseArgs(["--header", "X-Key: bad\nvalue"]).error).toMatch(/invalid --header/);
+    expect(parseArgs(["--bearer", "tok\r\nen"]).error).toMatch(/--bearer/);
+  });
+
   it("errors on a bad --timeout", () => {
     expect(parseArgs(["--timeout"]).error).toMatch(/--timeout/);
     expect(parseArgs(["--timeout", "soon"]).error).toMatch(/--timeout/);
