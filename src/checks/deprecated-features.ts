@@ -41,7 +41,10 @@ export function interpretDeprecated(
   capabilities: Record<string, unknown> | undefined,
 ): { status: CheckStatus; detail: string } {
   if (!capabilities) {
-    return { status: "skipped", detail: "couldn't read server capabilities to inspect for deprecated features" };
+    return {
+      status: "inconclusive",
+      detail: "couldn't read server capabilities to inspect for deprecated features",
+    };
   }
   const found = findDeprecatedCapabilities(capabilities);
   if (found.length === 0) {

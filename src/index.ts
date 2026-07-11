@@ -25,7 +25,8 @@ Options:
 Exit codes:
   0  ready (no failing checks)
   1  at least one check failed
-  2  couldn't test (probe error, or endpoint auth-walled / unreachable / not MCP)
+  2  couldn't test (probe error; endpoint auth-walled / unreachable / not MCP;
+     or the server answered too ambiguously to grade)
 `);
 }
 

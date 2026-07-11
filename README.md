@@ -15,6 +15,8 @@ The [MCP 2026-07-28 release](https://blog.modelcontextprotocol.io/posts/2026-07-
 
 Only the first three can fail a server; the rest are `warn` — optional or forward-looking, never counted as "not ready" on their own.
 
+A check the server answers too ambiguously to judge is marked `inconclusive` and — like a skipped check — doesn't count toward the grade. If too many land there, the tool reports grade `?` ("couldn't assess", exit 2) rather than guess.
+
 | Check | What it means |
 | --- | --- |
 | `discover` | `server/discover` replaces the initialize handshake; servers must implement it |
@@ -50,7 +52,7 @@ you get a readiness signal even behind the wall.
 
 ### CI
 
-Exit codes are CI-friendly: `0` ready · `1` at least one failing check · `2` couldn't test (probe error, or endpoint auth-walled / unreachable / not MCP).
+Exit codes are CI-friendly: `0` ready · `1` at least one failing check · `2` couldn't test (probe error; endpoint auth-walled / unreachable / not MCP; or the server answered our probes too ambiguously to grade).
 
 ```yaml
 - run: npx mcp-spec-check ${{ env.MCP_SERVER_URL }}

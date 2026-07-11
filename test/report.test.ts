@@ -38,8 +38,14 @@ describe("grade", () => {
   it("ignores skipped checks in the score", () => {
     expect(grade([r("pass"), r("pass"), r("pass"), r("skipped"), r("skipped")])).toBe("A");
   });
+  it("ignores inconclusive checks in the score (like skipped)", () => {
+    expect(grade([r("pass"), r("pass"), r("pass"), r("inconclusive"), r("inconclusive")])).toBe("A");
+  });
   it("returns ? when everything is skipped (no F for auth-walled servers)", () => {
     expect(grade([r("skipped"), r("skipped")])).toBe("?");
+  });
+  it("returns ? when mostly inconclusive (couldn't probe — the DeepWiki case)", () => {
+    expect(grade([r("pass"), r("inconclusive"), r("inconclusive"), r("inconclusive")])).toBe("?");
   });
   it("returns ? for a lone decided check (auth-walled: only auth-metadata ran)", () => {
     expect(grade([r("pass"), r("skipped"), r("skipped"), r("skipped")])).toBe("?");
@@ -47,8 +53,11 @@ describe("grade", () => {
 });
 
 describe("exit codes", () => {
-  it("0 when open and nothing fails", () => {
-    expect(exitCode(buildReport("u", "0", open, [r("pass"), r("warn"), r("todo")]))).toBe(0);
+  it("0 when open, gradeable, and nothing fails", () => {
+    expect(exitCode(buildReport("u", "0", open, [r("pass"), r("pass"), r("pass"), r("warn"), r("todo")]))).toBe(0);
+  });
+  it("2 when open but too few decided to assess (? grade — e.g. mostly inconclusive)", () => {
+    expect(exitCode(buildReport("u", "0", open, [r("pass"), r("inconclusive"), r("inconclusive")]))).toBe(2);
   });
   it("1 on any fail", () => {
     expect(exitCode(buildReport("u", "0", open, [r("pass"), r("fail")]))).toBe(1);
@@ -73,11 +82,15 @@ describe("exit codes", () => {
 describe("summarize", () => {
   it("counts by status", () => {
     const s = summarize([r("pass"), r("pass"), r("fail"), r("todo")]);
-    expect(s).toEqual({ pass: 2, fail: 1, warn: 0, todo: 1, error: 0, skipped: 0 });
+    expect(s).toEqual({ pass: 2, fail: 1, warn: 0, inconclusive: 0, todo: 1, error: 0, skipped: 0 });
   });
   it("counts skipped", () => {
     const s = summarize([r("skipped"), r("skipped"), r("pass")]);
-    expect(s).toEqual({ pass: 1, fail: 0, warn: 0, todo: 0, error: 0, skipped: 2 });
+    expect(s).toEqual({ pass: 1, fail: 0, warn: 0, inconclusive: 0, todo: 0, error: 0, skipped: 2 });
+  });
+  it("counts inconclusive", () => {
+    const s = summarize([r("inconclusive"), r("inconclusive"), r("pass"), r("skipped")]);
+    expect(s).toEqual({ pass: 1, fail: 0, warn: 0, inconclusive: 2, todo: 0, error: 0, skipped: 1 });
   });
 });
 

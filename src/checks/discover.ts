@@ -7,7 +7,7 @@
  *
  * fail is reserved for positive legacy signals — an unimplemented method or a
  * legacy session lifecycle. Anything ambiguous (including a discover result we
- * can't parse) is a warn, never a fail.
+ * can't parse) is inconclusive, never a fail.
  */
 import { postNext, rpcErrorCode, isSessionRejection, rpcResult } from "../client.js";
 import { ERROR, FIX_URLS, TARGET_PROTOCOL_VERSION } from "../spec.js";
@@ -34,7 +34,7 @@ export function interpretDiscover(
   }
   if (result) {
     return {
-      status: "warn",
+      status: "inconclusive",
       detail: "server/discover answered but with an unexpected shape (no supportedVersions array)",
     };
   }
@@ -58,13 +58,13 @@ export function interpretDiscover(
 
   if (code === ERROR.invalidParams || code === -32600 || code === ERROR.headerMismatch) {
     return {
-      status: "warn",
+      status: "inconclusive",
       detail: `server rejected the server/discover probe (code ${code}) — it may speak 2026-07-28 but this couldn't be confirmed`,
     };
   }
 
   return {
-    status: "warn",
+    status: "inconclusive",
     detail: `ambiguous response to server/discover (HTTP ${httpStatus}${
       code !== undefined ? `, code ${code}` : ""
     })`,

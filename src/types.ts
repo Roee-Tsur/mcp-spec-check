@@ -1,4 +1,4 @@
-export type CheckStatus = "pass" | "fail" | "warn" | "todo" | "error" | "skipped";
+export type CheckStatus = "pass" | "fail" | "warn" | "inconclusive" | "todo" | "error" | "skipped";
 
 export interface CheckResult {
   id: string;
@@ -60,5 +60,13 @@ export interface Report {
   preflight: Preflight;
   results: CheckResult[];
   grade: string;
-  summary: { pass: number; fail: number; warn: number; todo: number; error: number; skipped: number };
+  summary: {
+    pass: number;
+    fail: number;
+    warn: number;
+    inconclusive: number;
+    todo: number;
+    error: number;
+    skipped: number;
+  };
 }

@@ -12,13 +12,14 @@ const icons: Record<CheckResult["status"], string> = {
   pass: c.green("✔"),
   fail: c.red("✘"),
   warn: c.yellow("▲"),
+  inconclusive: c.dim("?"),
   todo: c.dim("…"),
   error: c.red("!"),
   skipped: c.dim("◌"),
 };
 
 export function summarize(results: CheckResult[]): Report["summary"] {
-  const summary = { pass: 0, fail: 0, warn: 0, todo: 0, error: 0, skipped: 0 };
+  const summary = { pass: 0, fail: 0, warn: 0, inconclusive: 0, todo: 0, error: 0, skipped: 0 };
   for (const r of results) summary[r.status]++;
   return summary;
 }
@@ -82,7 +83,7 @@ export function renderTerminal(report: Report): string {
   lines.push(
     `  grade: ${c.bold(report.grade)}   ` +
       c.dim(
-        `${s.pass} pass · ${s.fail} fail · ${s.warn} warn · ${s.skipped} skipped · ${s.todo} todo · ${s.error} error`,
+        `${s.pass} pass · ${s.fail} fail · ${s.warn} warn · ${s.inconclusive} inconclusive · ${s.skipped} skipped · ${s.todo} todo · ${s.error} error`,
       ),
   );
   if (s.todo > 0) {
@@ -92,6 +93,13 @@ export function renderTerminal(report: Report): string {
   if (report.grade === "?" && decided > 0 && decided < MIN_DECIDED_FOR_GRADE) {
     lines.push(c.dim(`  note: only ${decided} decided check(s) — too few for a letter grade`));
   }
+  if (report.grade === "?" && s.inconclusive > 0) {
+    lines.push(
+      c.dim(
+        `  note: ${s.inconclusive} check(s) inconclusive — the server didn't answer the 2026-07-28 probes cleanly`,
+      ),
+    );
+  }
   if (report.preflight.access === "auth-required") {
     lines.push(c.dim(`  note: endpoint is auth-walled — pass --bearer <token> to probe it`));
   }
@@ -99,10 +107,15 @@ export function renderTerminal(report: Report): string {
   return lines.join("\n");
 }
 
-/** Exit code contract: 0 = ready, 1 = at least one fail, 2 = couldn't test. */
+/**
+ * Exit code contract: 0 = ready, 1 = at least one fail, 2 = couldn't test.
+ * "Couldn't test" also covers an open endpoint we couldn't assess — a `?` grade
+ * (too few decided checks, e.g. the server answered probes ambiguously).
+ */
 export function exitCode(report: Report): number {
   if (report.preflight.access !== "open") return 2;
   if (report.summary.error > 0) return 2;
   if (report.summary.fail > 0) return 1;
+  if (report.grade === "?") return 2;
   return 0;
 }

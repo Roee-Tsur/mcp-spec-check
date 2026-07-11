@@ -20,8 +20,8 @@ describe("interpretDiscover", () => {
   it("warn when supportedVersions omits the target", () => {
     expect(interpretDiscover(200, result({ supportedVersions: ["2025-11-25"] })).status).toBe("warn");
   });
-  it("warn when the result has no supportedVersions array", () => {
-    expect(interpretDiscover(200, result({ serverInfo: {} })).status).toBe("warn");
+  it("inconclusive when the result has no supportedVersions array", () => {
+    expect(interpretDiscover(200, result({ serverInfo: {} })).status).toBe("inconclusive");
   });
   it("fail on a legacy session rejection", () => {
     expect(interpretDiscover(400, sessionReject).status).toBe("fail");
@@ -32,9 +32,9 @@ describe("interpretDiscover", () => {
   it("fail on a bare HTTP 404 with no envelope", () => {
     expect(interpretDiscover(404, undefined).status).toBe("fail");
   });
-  it("warn (never fail) when the server rejects our envelope", () => {
-    expect(interpretDiscover(400, error(-32602)).status).toBe("warn");
-    expect(interpretDiscover(400, error(-32020)).status).toBe("warn");
+  it("inconclusive (never fail) when the server rejects our envelope", () => {
+    expect(interpretDiscover(400, error(-32602)).status).toBe("inconclusive");
+    expect(interpretDiscover(400, error(-32020)).status).toBe("inconclusive");
   });
 });
 
@@ -49,15 +49,15 @@ describe("interpretSessionProbes", () => {
     expect(interpretSessionProbes(ok, reject).status).toBe("fail");
     expect(interpretSessionProbes(reject, ok).status).toBe("fail");
   });
-  it("warn when ambiguous", () => {
-    expect(interpretSessionProbes(other, other).status).toBe("warn");
+  it("inconclusive when ambiguous", () => {
+    expect(interpretSessionProbes(other, other).status).toBe("inconclusive");
   });
 });
 
 describe("interpretRoutingProbes", () => {
   const ok = { httpStatus: 200, body: result({ tools: [] }) };
-  it("warn when the control request fails", () => {
-    expect(interpretRoutingProbes({ httpStatus: 400, body: error(-32020) }, ok).status).toBe("warn");
+  it("inconclusive when the control request fails", () => {
+    expect(interpretRoutingProbes({ httpStatus: 400, body: error(-32020) }, ok).status).toBe("inconclusive");
   });
   it("fail when the mismatch is accepted (returns a result)", () => {
     expect(interpretRoutingProbes(ok, ok).status).toBe("fail");
@@ -81,8 +81,8 @@ describe("interpretErrorCodeProbe", () => {
   it("skipped when there is no resources capability (-32601)", () => {
     expect(interpretErrorCodeProbe(200, error(-32601)).status).toBe("skipped");
   });
-  it("warn when the probe URI unexpectedly resolves", () => {
-    expect(interpretErrorCodeProbe(200, result({ contents: [] })).status).toBe("warn");
+  it("inconclusive when the probe URI unexpectedly resolves", () => {
+    expect(interpretErrorCodeProbe(200, result({ contents: [] })).status).toBe("inconclusive");
   });
 });
 
@@ -97,10 +97,10 @@ describe("deprecated-features", () => {
   it("treats subscribe:false as not present", () => {
     expect(findDeprecatedCapabilities({ resources: { subscribe: false } })).toEqual([]);
   });
-  it("interpret: warn when deprecated caps declared, pass when clean, skipped when unknown", () => {
+  it("interpret: warn when deprecated caps declared, pass when clean, inconclusive when unknown", () => {
     expect(interpretDeprecated({ logging: {} }).status).toBe("warn");
     expect(interpretDeprecated({ tools: {} }).status).toBe("pass");
-    expect(interpretDeprecated(undefined).status).toBe("skipped");
+    expect(interpretDeprecated(undefined).status).toBe("inconclusive");
   });
 });
 
@@ -116,8 +116,8 @@ describe("interpretCacheFields", () => {
     expect(interpretCacheFields({ ttlMs: 5000 }).status).toBe("warn");
     expect(interpretCacheFields({ ttlMs: 5000, cacheScope: "bogus" }).status).toBe("warn");
   });
-  it("warn when there is no result", () => {
-    expect(interpretCacheFields(undefined).status).toBe("warn");
+  it("inconclusive when there is no result", () => {
+    expect(interpretCacheFields(undefined).status).toBe("inconclusive");
   });
 });
 
@@ -126,9 +126,11 @@ describe("interpretMrtr", () => {
     expect(interpretMrtr({ resultType: "complete" }, undefined).status).toBe("pass");
     expect(interpretMrtr({ resultType: "input_required" }, undefined).status).toBe("pass");
   });
-  it("warn when resultType is absent", () => {
+  it("warn when resultType is absent from a result", () => {
     expect(interpretMrtr({ tools: [] }, undefined).status).toBe("warn");
-    expect(interpretMrtr(undefined, undefined).status).toBe("warn");
+  });
+  it("inconclusive when there is no result to inspect", () => {
+    expect(interpretMrtr(undefined, undefined).status).toBe("inconclusive");
   });
   it("notes a removed GET endpoint (405) in the detail", () => {
     const r = interpretMrtr({ resultType: "complete" }, { httpStatus: 405, headers: new Headers(), contentType: "" });

@@ -16,7 +16,10 @@ export function interpretCacheFields(
   result: Record<string, unknown> | undefined,
 ): { status: CheckStatus; detail: string } {
   if (!result) {
-    return { status: "warn", detail: "tools/list returned no result to inspect for cache metadata" };
+    return {
+      status: "inconclusive",
+      detail: "tools/list returned no result to inspect for cache metadata",
+    };
   }
   const ttl = result["ttlMs"];
   const scope = result["cacheScope"];
@@ -48,7 +51,10 @@ export const cacheMetadata: CheckDefinition = {
   async run(ctx) {
     const t = await acquireTransport(ctx);
     if (t.mode === "none") {
-      return { status: "warn", detail: `couldn't establish a request mode to inspect cache metadata (${t.detail})` };
+      return {
+        status: "inconclusive",
+        detail: `couldn't establish a request mode to inspect cache metadata (${t.detail})`,
+      };
     }
     const res = await t.send("tools/list", {});
     return interpretCacheFields(rpcResult(res.body));

@@ -32,7 +32,7 @@ export function interpretMrtr(
 ): { status: CheckStatus; detail: string } {
   const note = getNote(get);
   if (!result) {
-    return { status: "warn", detail: `no result available to inspect for resultType${note}` };
+    return { status: "inconclusive", detail: `no result available to inspect for resultType${note}` };
   }
   const resultType = result["resultType"];
   if (resultType === RESULT_TYPES.complete || resultType === RESULT_TYPES.inputRequired) {
@@ -57,7 +57,10 @@ export const mrtr: CheckDefinition = {
       headers: ctx.headers,
     }).catch(() => undefined);
     if (t.mode === "none") {
-      return { status: "warn", detail: `couldn't establish a request mode to inspect resultType${getNote(get)}` };
+      return {
+        status: "inconclusive",
+        detail: `couldn't establish a request mode to inspect resultType${getNote(get)}`,
+      };
     }
     const res = await t.send("tools/list", {});
     return interpretMrtr(rpcResult(res.body), get);

@@ -21,7 +21,7 @@ export function interpretRoutingProbes(
 ): { status: CheckStatus; detail: string } {
   if (!rpcResult(control.body)) {
     return {
-      status: "warn",
+      status: "inconclusive",
       detail: "couldn't run a control request with correct routing headers — routing not evaluated",
     };
   }
@@ -55,7 +55,10 @@ export const routingHeaders: CheckDefinition = {
   async run(ctx) {
     const t = await acquireTransport(ctx);
     if (t.mode === "none") {
-      return { status: "warn", detail: `couldn't establish a request mode to test routing (${t.detail})` };
+      return {
+        status: "inconclusive",
+        detail: `couldn't establish a request mode to test routing (${t.detail})`,
+      };
     }
     const control = await t.send("tools/list", {});
     const mismatch = await t.send("tools/list", {}, {

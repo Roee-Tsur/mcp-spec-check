@@ -34,6 +34,8 @@ const OLD_URL = "http://127.0.0.1:7101/mcp";
 const RC_URL = "http://127.0.0.1:7102/mcp";
 const AUTH_PORT = 7103;
 const AUTH_URL = `http://127.0.0.1:${AUTH_PORT}/mcp`;
+const AMBIG_PORT = 7104;
+const AMBIG_URL = `http://127.0.0.1:${AMBIG_PORT}/mcp`;
 
 const EXPECTED: Record<string, Expectation> = {
   "RC 2026-07-28": {
@@ -84,6 +86,28 @@ const EXPECTED: Record<string, Expectation> = {
       "auth-metadata": "warn",
     },
   },
+  // Reproduces the real-world "DeepWiki" case: answers the legacy `initialize`
+  // (so preflight classifies it `open`) but rejects every actual probe with
+  // -32600 Invalid Request. The core checks can't get a clean signal → they
+  // report `inconclusive` (not warn), so the server drops below the decided
+  // threshold → grade "?", exit 2 ("couldn't test"), rather than a misleading
+  // middling grade with exit 0. deprecated-features still passes because the
+  // initialize fallback exposes an (empty) capabilities object.
+  "ambiguous -32600": {
+    url: AMBIG_URL,
+    exitCode: 2,
+    grade: "?",
+    checks: {
+      discover: "inconclusive",
+      "routing-headers": "inconclusive",
+      "session-independence": "inconclusive",
+      "error-codes": "inconclusive",
+      "cache-metadata": "inconclusive",
+      mrtr: "inconclusive",
+      "deprecated-features": "pass",
+      "auth-metadata": "skipped",
+    },
+  },
 };
 
 function startAuthServer(): Server {
@@ -95,6 +119,52 @@ function startAuthServer(): Server {
     res.end(JSON.stringify({ error: "unauthorized" }));
   });
   server.listen(AUTH_PORT, "127.0.0.1");
+  return server;
+}
+
+/**
+ * An endpoint that answers the legacy `initialize` (so preflight sees an open,
+ * 2025-11-25 server) but rejects every actual probe with JSON-RPC -32600
+ * (Invalid Request) — the pathological "ambiguous transport" case observed live
+ * on DeepWiki. Every core check gets an undecidable response → `inconclusive`.
+ */
+function startAmbiguousServer(): Server {
+  const server = createServer((req, res) => {
+    let raw = "";
+    req.on("data", (chunk) => (raw += chunk));
+    req.on("end", () => {
+      // GET (e.g. /.well-known/oauth-protected-resource) → 404 so auth-metadata
+      // finds no document on this open endpoint and skips.
+      if (req.method !== "POST") {
+        res.writeHead(404).end();
+        return;
+      }
+      let method: unknown;
+      let id: unknown = null;
+      try {
+        const msg = JSON.parse(raw || "{}") as { method?: unknown; id?: unknown };
+        method = msg.method;
+        id = msg.id ?? null;
+      } catch {
+        /* leave method undefined → falls through to the -32600 rejection */
+      }
+      const headers = { "content-type": "application/json" };
+      const body =
+        method === "initialize"
+          ? {
+              jsonrpc: "2.0",
+              id,
+              result: {
+                protocolVersion: "2025-11-25",
+                capabilities: {},
+                serverInfo: { name: "ambiguous", version: "0" },
+              },
+            }
+          : { jsonrpc: "2.0", id, error: { code: -32600, message: "Invalid Request" } };
+      res.writeHead(200, headers).end(JSON.stringify(body));
+    });
+  });
+  server.listen(AMBIG_PORT, "127.0.0.1");
   return server;
 }
 
@@ -160,6 +230,7 @@ const DIM = (s: string) => `\x1b[2m${s}\x1b[0m`;
 
 async function main(): Promise<void> {
   const auth = startAuthServer();
+  const ambig = startAmbiguousServer();
   const old = spawnRefServer("old-server.ts");
   const rc = spawnRefServer("rc-server.ts");
 
@@ -169,6 +240,7 @@ async function main(): Promise<void> {
       waitForReady(OLD_URL, "old-server"),
       waitForReady(RC_URL, "rc-server"),
       waitForReady(AUTH_URL, "auth-server"),
+      waitForReady(AMBIG_URL, "ambiguous-server"),
     ]);
 
     for (const [label, exp] of Object.entries(EXPECTED)) {
@@ -197,6 +269,7 @@ async function main(): Promise<void> {
     old.kill();
     rc.kill();
     auth.close();
+    ambig.close();
   }
 
   console.log("");

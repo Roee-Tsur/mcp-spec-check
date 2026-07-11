@@ -38,7 +38,7 @@ export function interpretSessionProbes(
     };
   }
   return {
-    status: "warn",
+    status: "inconclusive",
     detail: `couldn't confirm statelessness (request outcomes: ${oa}, ${ob})`,
   };
 }

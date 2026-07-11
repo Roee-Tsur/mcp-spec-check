@@ -44,12 +44,12 @@ export function interpretErrorCodeProbe(
   }
   if (rpcResult(body)) {
     return {
-      status: "warn",
+      status: "inconclusive",
       detail: "the probe URI unexpectedly resolved — couldn't trigger a not-found error to inspect",
     };
   }
   return {
-    status: "warn",
+    status: "inconclusive",
     detail: `unexpected response probing resource-not-found (HTTP ${httpStatus}${
       code !== undefined ? `, code ${code}` : ""
     })`,
@@ -64,7 +64,10 @@ export const errorCodes: CheckDefinition = {
   async run(ctx) {
     const t = await acquireTransport(ctx);
     if (t.mode === "none") {
-      return { status: "warn", detail: `couldn't establish a request mode to probe error codes (${t.detail})` };
+      return {
+        status: "inconclusive",
+        detail: `couldn't establish a request mode to probe error codes (${t.detail})`,
+      };
     }
     const res = await t.send("resources/read", { uri: PROBE_URI });
     return interpretErrorCodeProbe(res.httpStatus, res.body);
