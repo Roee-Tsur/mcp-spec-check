@@ -48,14 +48,45 @@ export async function postJsonRpc(
     });
     const rawBody = await res.text();
     let body: unknown;
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
-      body = undefined;
+    if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) {
+      body = parseSseJson(rawBody);
+    } else {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        body = undefined;
+      }
     }
     return { httpStatus: res.status, headers: res.headers, body, rawBody };
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * Extract the first SSE `data:` event payload from a raw body and JSON.parse it.
+ * Streamable-HTTP servers commonly wrap the JSON-RPC response in an SSE stream:
+ *
+ *   event: message
+ *   data: {"jsonrpc":"2.0",...}
+ *
+ * Multi-line `data:` fields within one event are joined with "\n" per the SSE
+ * spec. Returns undefined when no parseable data event is present.
+ */
+export function parseSseJson(rawBody: string): unknown | undefined {
+  const dataLines: string[] = [];
+  for (const line of rawBody.split(/\r?\n/)) {
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice(5).replace(/^ /, ""));
+    } else if (line === "" && dataLines.length > 0) {
+      break; // blank line ends the first event that carried data
+    }
+  }
+  if (dataLines.length === 0) return undefined;
+  try {
+    return JSON.parse(dataLines.join("\n"));
+  } catch {
+    return undefined;
   }
 }
 

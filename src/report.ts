@@ -1,4 +1,4 @@
-import type { CheckResult, Report } from "./types.js";
+import type { CheckResult, Preflight, Report } from "./types.js";
 
 const c = {
   green: (s: string) => `\x1b[32m${s}\x1b[0m`,
@@ -14,10 +14,11 @@ const icons: Record<CheckResult["status"], string> = {
   warn: c.yellow("▲"),
   todo: c.dim("…"),
   error: c.red("!"),
+  skipped: c.dim("◌"),
 };
 
 export function summarize(results: CheckResult[]): Report["summary"] {
-  const summary = { pass: 0, fail: 0, warn: 0, todo: 0, error: 0 };
+  const summary = { pass: 0, fail: 0, warn: 0, todo: 0, error: 0, skipped: 0 };
   for (const r of results) summary[r.status]++;
   return summary;
 }
@@ -39,12 +40,18 @@ export function grade(results: CheckResult[]): string {
   return "F";
 }
 
-export function buildReport(url: string, toolVersion: string, results: CheckResult[]): Report {
+export function buildReport(
+  url: string,
+  toolVersion: string,
+  preflight: Preflight,
+  results: CheckResult[],
+): Report {
   return {
     url,
     timestamp: new Date().toISOString(),
     toolVersion,
     targetSpec: "2026-07-28",
+    preflight,
     results,
     grade: grade(results),
     summary: summarize(results),
@@ -56,6 +63,7 @@ export function renderTerminal(report: Report): string {
   lines.push("");
   lines.push(c.bold(`mcp-ready — readiness for MCP spec 2026-07-28`));
   lines.push(c.dim(report.url));
+  lines.push(c.dim(`access: ${report.preflight.access} · ${report.preflight.detail}`));
   lines.push("");
   for (const r of report.results) {
     lines.push(`  ${icons[r.status]} ${r.title}`);
@@ -66,17 +74,23 @@ export function renderTerminal(report: Report): string {
   const s = report.summary;
   lines.push(
     `  grade: ${c.bold(report.grade)}   ` +
-      c.dim(`${s.pass} pass · ${s.fail} fail · ${s.warn} warn · ${s.todo} todo · ${s.error} error`),
+      c.dim(
+        `${s.pass} pass · ${s.fail} fail · ${s.warn} warn · ${s.skipped} skipped · ${s.todo} todo · ${s.error} error`,
+      ),
   );
   if (s.todo > 0) {
     lines.push(c.dim(`  note: ${s.todo} checks not implemented yet — grade is partial`));
+  }
+  if (report.preflight.access === "auth-required") {
+    lines.push(c.dim(`  note: endpoint is auth-walled — pass --bearer <token> to probe it`));
   }
   lines.push("");
   return lines.join("\n");
 }
 
-/** Exit code contract: 0 = ready, 1 = at least one fail, 2 = probe error. */
+/** Exit code contract: 0 = ready, 1 = at least one fail, 2 = couldn't test. */
 export function exitCode(report: Report): number {
+  if (report.preflight.access !== "open") return 2;
   if (report.summary.error > 0) return 2;
   if (report.summary.fail > 0) return 1;
   return 0;

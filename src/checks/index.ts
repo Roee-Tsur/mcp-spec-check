@@ -6,6 +6,7 @@ import { errorCodes } from "./error-codes.js";
 import { cacheMetadata } from "./cache-metadata.js";
 import { mrtr } from "./mrtr.js";
 import { deprecatedFeatures } from "./deprecated-features.js";
+import { authMetadata } from "./auth-metadata.js";
 
 export const allChecks: CheckDefinition[] = [
   discover,
@@ -15,4 +16,5 @@ export const allChecks: CheckDefinition[] = [
   cacheMetadata,
   mrtr,
   deprecatedFeatures,
+  authMetadata,
 ];
