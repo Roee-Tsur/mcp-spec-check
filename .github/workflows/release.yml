@@ -1,7 +1,8 @@
 # Publishes to npm when you push a version tag (e.g. v0.1.0).
-# One-time setup: create an npm "Automation" token at npmjs.com → Access Tokens,
-# then add it as a repo secret named NPM_TOKEN (GitHub → Settings → Secrets → Actions).
-# Release flow: npm version patch && git push --follow-tags
+# One-time setup: create an npm token (2FA-bypass) at npmjs.com → Access Tokens,
+# then add it as the NPM_TOKEN secret under the "Production" environment
+# (GitHub → Settings → Environments → Production → Environment secrets).
+# Release flow: npm version minor && git push --follow-tags
 name: Release
 
 on:
@@ -16,6 +17,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: Production # NPM_TOKEN lives in this environment's secrets
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
