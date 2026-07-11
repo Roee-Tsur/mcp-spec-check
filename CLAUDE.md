@@ -39,4 +39,4 @@ Zero-install CLI (`npx mcp-ready <url>`) that black-box-probes a remote MCP serv
 
 ## Current state
 
-Scaffold only. `discover` check is semi-implemented (needs spec verification); the other six throw `NotImplementedError`. Plumbing (runner, grading, rendering, exit codes) works end-to-end and is unit-tested.
+Premise verified against live sources 2026-07-11 (RC blog post, SDK-betas post, registry API). Plumbing is implemented and unit-tested end-to-end: runner, grading, rendering, exit codes, preflight endpoint classification (open / auth-required / not-mcp / unreachable), `--bearer`/`--header` auth flags, `skipped` status, and SSE response unwrapping. All 8 checks (`discover` is semi-implemented; the rest throw `NotImplementedError`) are stubs pending RC-text verification and reference servers.
