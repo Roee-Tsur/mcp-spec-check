@@ -3,7 +3,7 @@ import { NotImplementedError, type CheckDefinition } from "../types.js";
 export const sessionIndependence: CheckDefinition = {
   id: "session-independence",
   title: "Works without Mcp-Session-Id (stateless)",
-  why: "The protocol-level session is removed in 2026-07-28; servers pinned to session state will break behind load balancers.",
+  why: "The protocol-level session is removed in 2026-07-28; servers pinned to session state can't serve the stateless core behind load balancers.",
   fixUrl:
     "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
   async run() {

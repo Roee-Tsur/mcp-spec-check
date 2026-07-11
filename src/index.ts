@@ -7,7 +7,7 @@ const VERSION = "0.0.1";
 
 function usage(): void {
   console.log(`
-mcp-ready — will your remote MCP server break on the 2026-07-28 spec release?
+mcp-ready — is your remote MCP server ready for the 2026-07-28 spec release?
 
 Usage:
   npx mcp-ready <url> [options]
