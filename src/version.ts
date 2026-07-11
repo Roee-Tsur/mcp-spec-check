@@ -2,7 +2,7 @@
  * Single source of truth for the tool version. Read from package.json at module
  * load so `npm version` (which bumps package.json only) propagates everywhere —
  * the `--version` output, the report's toolVersion, and the clientInfo identity
- * mcp-ready presents to every probed server.
+ * mcp-spec-check presents to every probed server.
  *
  * The relative URL resolves in all three execution contexts: the published
  * tarball (dist/version.js → ../package.json = package root; npm always ships
@@ -18,5 +18,5 @@ const pkg = JSON.parse(
 
 export const VERSION: string = pkg.version;
 
-/** Identity mcp-ready presents in the _meta clientInfo of every request. */
-export const CLIENT_INFO = { name: "mcp-ready", version: VERSION } as const;
+/** Identity mcp-spec-check presents in the _meta clientInfo of every request. */
+export const CLIENT_INFO = { name: "mcp-spec-check", version: VERSION } as const;

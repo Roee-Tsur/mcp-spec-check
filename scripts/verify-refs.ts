@@ -1,5 +1,5 @@
 /**
- * verify-refs — the live test oracle for mcp-ready (PLAN.md Milestone 1: "each
+ * verify-refs — the live test oracle for mcp-spec-check (PLAN.md Milestone 1: "each
  * check verified against both reference servers before marking done").
  *
  * Spawns the two reference servers (old-spec 2025-11-25 + RC 2026-07-28) and a

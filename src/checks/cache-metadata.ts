@@ -1,7 +1,7 @@
 /**
  * 2026-07-28 adds CacheableResult (SEP-2549): ttlMs + cacheScope on the results
  * of tools/list, prompts/list, resources/list, resources/read, and
- * resources/templates/list. The RC marks them REQUIRED, but mcp-ready treats
+ * resources/templates/list. The RC marks them REQUIRED, but mcp-spec-check treats
  * their absence as a WARN, never a fail, during the beta window: (a) beta SDKs
  * may not emit them yet, so failing would flag genuinely-migrated servers;
  * (b) missing cache hints don't break interop the way discover/sessions do.
@@ -43,7 +43,7 @@ export function interpretCacheFields(
 export const cacheMetadata: CheckDefinition = {
   id: "cache-metadata",
   title: "ttlMs / cacheScope on list responses",
-  why: "New cache-control metadata on list/read responses (SEP-2549). Optional in mcp-ready's grading during the beta — absence is a warn, never a fail.",
+  why: "New cache-control metadata on list/read responses (SEP-2549). Optional in mcp-spec-check's grading during the beta — absence is a warn, never a fail.",
   fixUrl: FIX_URLS.cacheMetadata,
   async run(ctx) {
     const t = await acquireTransport(ctx);

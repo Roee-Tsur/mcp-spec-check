@@ -68,7 +68,7 @@ export function buildReport(
 export function renderTerminal(report: Report): string {
   const lines: string[] = [];
   lines.push("");
-  lines.push(c.bold(`mcp-ready — readiness for MCP spec 2026-07-28`));
+  lines.push(c.bold(`mcp-spec-check — readiness for MCP spec 2026-07-28`));
   lines.push(c.dim(report.url));
   lines.push(c.dim(`access: ${report.preflight.access} · ${report.preflight.detail}`));
   lines.push("");

@@ -1,6 +1,6 @@
-# mcp-ready
+# mcp-spec-check
 
-Zero-install CLI (`npx mcp-ready <url>`) that black-box-probes a remote MCP server and reports whether it's ready for the **MCP spec release of 2026-07-28**. Second deliverable: a scan of the public registry ("X% of public MCP servers aren't ready") published as a writeup.
+Zero-install CLI (`npx mcp-spec-check <url>`) that black-box-probes a remote MCP server and reports whether it's ready for the **MCP spec release of 2026-07-28**. Second deliverable: a scan of the public registry ("X% of public MCP servers aren't ready") published as a writeup.
 
 ## Commands
 
@@ -48,4 +48,4 @@ Premise verified against live sources 2026-07-11 (RC blog post, SDK-betas post, 
 - **`npm run verify:refs`** is the live oracle: asserts the full per-check verdict matrix + grade + exit code for RC (A/0), old (F/1), and an inline auth-walled fixture (?/2). Kept out of `npm test` (which stays offline), but runs in CI as a dedicated `verify-refs` job that installs `ref-servers/` deps first (`.github/workflows/ci.yml`). `npm run verify:conformance` runs the official suite (`@alpha`) against the RC fixture as a co-oracle (manual only — it network-fetches an alpha package).
 - Notable finding: SDK 1.21.0 already emits the renumbered `-32602` for resource-not-found, so `error-codes` passes recent old-spec servers too — it only catches genuinely old error tables. `cache-metadata`/`mrtr`/`deprecated-features` are warn-only. `auth-metadata` runs through auth walls (`runsWhenAuthWalled`) and `grade()` stays `?` below `MIN_DECIDED_FOR_GRADE` (3).
 
-**Milestone 2 (Ship the CLI) in progress — 2026-07-11.** Code + docs done: `src/version.ts` centralizes `VERSION`/`CLIENT_INFO` (read from package.json, so `npm version` propagates); README finalized (honest checks table, badges, no pre-release banner); `verify-refs` now runs in CI. Repo is public at `Roee-Tsur/mcp-ready`. **Remaining before publish:** user must create the npm Automation token + add it as the `NPM_TOKEN` repo secret (release.yml is gated on it), then `npm version minor` + `git push --follow-tags` ships v0.1.0 via the tag flow. Post-publish: cold-test `npx mcp-ready` from a repo-less dir and `--bearer` against a real authed server.
+**Milestone 2 (Ship the CLI) in progress — 2026-07-11.** Code + docs done: `src/version.ts` centralizes `VERSION`/`CLIENT_INFO` (read from package.json, so `npm version` propagates); README finalized (honest checks table, badges, no pre-release banner); `verify-refs` now runs in CI. Repo is public at `Roee-Tsur/mcp-spec-check`. **Remaining before publish:** user must create the npm Automation token + add it as the `NPM_TOKEN` repo secret (release.yml is gated on it), then `npm version minor` + `git push --follow-tags` ships v0.1.0 via the tag flow. Post-publish: cold-test `npx mcp-spec-check` from a repo-less dir and `--bearer` against a real authed server.

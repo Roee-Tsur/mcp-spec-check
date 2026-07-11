@@ -8,10 +8,10 @@ import { VERSION } from "./version.js";
 
 function usage(): void {
   console.log(`
-mcp-ready — is your remote MCP server ready for the 2026-07-28 spec release?
+mcp-spec-check — is your remote MCP server ready for the 2026-07-28 spec release?
 
 Usage:
-  npx mcp-ready <url> [options]
+  npx mcp-spec-check <url> [options]
 
 Options:
   --json              Output machine-readable JSON instead of the terminal report

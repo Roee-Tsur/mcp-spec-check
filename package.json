@@ -1,10 +1,10 @@
 {
-  "name": "mcp-ready",
+  "name": "mcp-spec-check",
   "version": "0.1.0",
   "description": "Is your remote MCP server ready for the MCP 2026-07-28 spec release? Zero-install black-box readiness probe.",
   "type": "module",
   "bin": {
-    "mcp-ready": "dist/index.js"
+    "mcp-spec-check": "dist/index.js"
   },
   "files": [
     "dist"
@@ -37,10 +37,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Roee-Tsur/mcp-ready.git"
+    "url": "git+https://github.com/Roee-Tsur/mcp-spec-check.git"
   },
-  "homepage": "https://github.com/Roee-Tsur/mcp-ready#readme",
-  "bugs": "https://github.com/Roee-Tsur/mcp-ready/issues",
+  "homepage": "https://github.com/Roee-Tsur/mcp-spec-check#readme",
+  "bugs": "https://github.com/Roee-Tsur/mcp-spec-check/issues",
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",

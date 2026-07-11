@@ -22,6 +22,6 @@ describe("version", () => {
   });
 
   it("carries the version into the probed-server clientInfo identity", () => {
-    expect(CLIENT_INFO).toEqual({ name: "mcp-ready", version: VERSION });
+    expect(CLIENT_INFO).toEqual({ name: "mcp-spec-check", version: VERSION });
   });
 });

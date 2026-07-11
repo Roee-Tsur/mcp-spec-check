@@ -15,7 +15,7 @@ import { acquireTransport } from "../probe-transport.js";
 import { ERROR, FIX_URLS } from "../spec.js";
 import type { CheckDefinition, CheckStatus } from "../types.js";
 
-const PROBE_URI = "urn:mcp-ready:probe-does-not-exist";
+const PROBE_URI = "urn:mcp-spec-check:probe-does-not-exist";
 
 export function interpretErrorCodeProbe(
   httpStatus: number,

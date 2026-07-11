@@ -83,7 +83,7 @@ export const ERROR = {
 
 /**
  * Results carrying cache metadata (SEP-2549, CacheableResult). ttlMs +
- * cacheScope are REQUIRED on each in the RC; mcp-ready treats their absence as
+ * cacheScope are REQUIRED on each in the RC; mcp-spec-check treats their absence as
  * a warn during the beta window (see cache-metadata check).
  */
 export const CACHEABLE_METHODS = new Set([
