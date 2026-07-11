@@ -1,0 +1,23 @@
+{
+  "name": "mcp-ready-ref-servers",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local reference MCP servers (old-spec 2025-11-25 + RC 2026-07-28) used as the test oracle for mcp-ready. Never published; kept out of the npm tarball by the root package's files:[\"dist\"].",
+  "type": "module",
+  "scripts": {
+    "start:old": "tsx old-server.ts",
+    "start:rc": "tsx rc-server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.21.0",
+    "@modelcontextprotocol/server": "2.0.0-beta.3",
+    "@modelcontextprotocol/node": "2.0.0-beta.3",
+    "express": "5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.3",
+    "@types/node": "22.10.0",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3"
+  }
+}

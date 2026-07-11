@@ -39,4 +39,13 @@ Requires Node ≥20 (uses global fetch); develop and install under Node 22.
 
 ## Current state
 
-Premise verified against live sources 2026-07-11 (RC blog post, SDK-betas post, registry API). Plumbing is implemented and unit-tested end-to-end: runner, grading, rendering, exit codes, preflight endpoint classification (open / auth-required / not-mcp / unreachable), `--bearer`/`--header` auth flags, `skipped` status, and SSE response unwrapping. All 8 checks (`discover` is semi-implemented; the rest throw `NotImplementedError`) are stubs pending RC-text verification and reference servers.
+Premise verified against live sources 2026-07-11 (RC blog post, SDK-betas post, registry API). Plumbing implemented and unit-tested end-to-end: runner, grading, rendering, exit codes, preflight classification, `--bearer`/`--header`, `skipped` status, SSE unwrapping.
+
+**Milestone 1 (Probe core) complete — 2026-07-11.** All 8 checks implemented and verified against both reference servers:
+- Verified spec facts centralized in `src/spec.ts` (protocol version, `_meta` keys, header names, both error-code generations, per-check `FIX_URLS`); authoritative source is `/specification/draft/changelog` (SEP pages are stale on the renumbered error codes). No `TODO(verify)` markers remain.
+- `src/client.ts` gained the next-mode envelope (`buildNextRequest` pure + `postNext`) and GET helpers (`getProbe`, `getJson`); `src/probe-transport.ts` (`acquireTransport`) gives checks a working request mode on both stateless-RC and stateful-legacy servers.
+- Reference servers in `ref-servers/` (own pinned package.json — root stays zero-dep): `old-server.ts` (SDK v1 1.21.0, stateful, :7101) and `rc-server.ts` (`@modelcontextprotocol/server`+`/node` beta, :7102). `npm run refs:old` / `refs:rc`.
+- **`npm run verify:refs`** is the live oracle: asserts the full per-check verdict matrix + grade + exit code for RC (A/0), old (F/1), and an inline auth-walled fixture (?/2). Not in `npm test`/CI yet (needs `ref-servers/` installed — deferred to M2). `npm run verify:conformance` runs the official suite (`@alpha`) against the RC fixture as a co-oracle.
+- Notable finding: SDK 1.21.0 already emits the renumbered `-32602` for resource-not-found, so `error-codes` passes recent old-spec servers too — it only catches genuinely old error tables. `cache-metadata`/`mrtr`/`deprecated-features` are warn-only. `auth-metadata` runs through auth walls (`runsWhenAuthWalled`) and `grade()` stays `?` below `MIN_DECIDED_FOR_GRADE` (3).
+
+Next: Milestone 2 (ship the CLI) — README, `VERSION` sync, npm publish.

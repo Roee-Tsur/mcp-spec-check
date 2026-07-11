@@ -16,6 +16,8 @@ export interface ProbeContext {
   verbose: boolean;
   /** Extra HTTP headers sent with every probe (e.g. Authorization). Always present; default {}. */
   headers: Record<string, string>;
+  /** Transport classification from preflight, set by the runner before checks run. */
+  preflight?: Preflight;
 }
 
 /** Transport-level classification of the endpoint, decided before any check runs. */
@@ -34,6 +36,12 @@ export interface CheckDefinition {
   /** Why this matters for the 2026-07-28 release (shown in verbose mode). */
   why: string;
   fixUrl: string;
+  /**
+   * When true, this check still runs on an auth-walled (401/403) endpoint —
+   * its probe is origin-level and works outside the auth wall (auth-metadata).
+   * All other checks are skipped there.
+   */
+  runsWhenAuthWalled?: boolean;
   run(ctx: ProbeContext): Promise<Omit<CheckResult, "id" | "title" | "fixUrl">>;
 }
 

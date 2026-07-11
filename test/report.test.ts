@@ -18,24 +18,31 @@ describe("grade", () => {
   it("returns ? when nothing is decided", () => {
     expect(grade([r("todo"), r("error")])).toBe("?");
   });
-  it("returns A for all pass", () => {
-    expect(grade([r("pass"), r("pass")])).toBe("A");
+  it("returns ? below the minimum decided-check count (1 or 2 decided)", () => {
+    expect(grade([r("pass")])).toBe("?");
+    expect(grade([r("pass"), r("pass")])).toBe("?");
   });
-  it("returns F for all fail", () => {
-    expect(grade([r("fail"), r("fail")])).toBe("F");
+  it("returns A for all pass (≥3 decided)", () => {
+    expect(grade([r("pass"), r("pass"), r("pass")])).toBe("A");
+  });
+  it("returns F for all fail (≥3 decided)", () => {
+    expect(grade([r("fail"), r("fail"), r("fail")])).toBe("F");
   });
   it("counts warn as half", () => {
-    // 1 pass + 1 warn = 1.5/2 = 0.75 → B
-    expect(grade([r("pass"), r("warn")])).toBe("B");
+    // 2 pass + 1 warn = 2.5/3 = 0.833 → B
+    expect(grade([r("pass"), r("pass"), r("warn")])).toBe("B");
   });
   it("ignores todo checks in the score", () => {
-    expect(grade([r("pass"), r("todo"), r("todo")])).toBe("A");
+    expect(grade([r("pass"), r("pass"), r("pass"), r("todo"), r("todo")])).toBe("A");
   });
   it("ignores skipped checks in the score", () => {
-    expect(grade([r("pass"), r("skipped"), r("skipped")])).toBe("A");
+    expect(grade([r("pass"), r("pass"), r("pass"), r("skipped"), r("skipped")])).toBe("A");
   });
   it("returns ? when everything is skipped (no F for auth-walled servers)", () => {
     expect(grade([r("skipped"), r("skipped")])).toBe("?");
+  });
+  it("returns ? for a lone decided check (auth-walled: only auth-metadata ran)", () => {
+    expect(grade([r("pass"), r("skipped"), r("skipped"), r("skipped")])).toBe("?");
   });
 });
 

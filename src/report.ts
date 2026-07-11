@@ -24,12 +24,19 @@ export function summarize(results: CheckResult[]): Report["summary"] {
 }
 
 /**
+ * A letter grade needs at least this many decided checks. Below it (e.g. an
+ * auth-walled endpoint where only auth-metadata runs) the grade stays "?" —
+ * one or two decided checks aren't a representative sample to letter-grade.
+ */
+export const MIN_DECIDED_FOR_GRADE = 3;
+
+/**
  * Grade only over decided checks (pass/fail/warn). warn counts half.
- * Returns "?" when nothing is decided yet.
+ * Returns "?" when fewer than MIN_DECIDED_FOR_GRADE checks are decided.
  */
 export function grade(results: CheckResult[]): string {
   const decided = results.filter((r) => ["pass", "fail", "warn"].includes(r.status));
-  if (decided.length === 0) return "?";
+  if (decided.length < MIN_DECIDED_FOR_GRADE) return "?";
   const score =
     decided.reduce((acc, r) => acc + (r.status === "pass" ? 1 : r.status === "warn" ? 0.5 : 0), 0) /
     decided.length;
@@ -80,6 +87,10 @@ export function renderTerminal(report: Report): string {
   );
   if (s.todo > 0) {
     lines.push(c.dim(`  note: ${s.todo} checks not implemented yet — grade is partial`));
+  }
+  const decided = s.pass + s.fail + s.warn;
+  if (report.grade === "?" && decided > 0 && decided < MIN_DECIDED_FOR_GRADE) {
+    lines.push(c.dim(`  note: only ${decided} decided check(s) — too few for a letter grade`));
   }
   if (report.preflight.access === "auth-required") {
     lines.push(c.dim(`  note: endpoint is auth-walled — pass --bearer <token> to probe it`));

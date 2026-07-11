@@ -1,38 +1,86 @@
-import { postJsonRpc, rpcErrorCode } from "../client.js";
-import type { CheckDefinition } from "../types.js";
-
 /**
- * The 2026-07-28 spec replaces the initialize handshake with server/discover.
- * A server that returns method-not-found for it has not migrated.
+ * server/discover replaces the initialize handshake in the 2026-07-28 stateless
+ * core (SEP-2575). Servers MUST implement it and advertise their supported
+ * protocol versions. We probe it in full next-mode (the required _meta identity
+ * + MCP-Protocol-Version / Mcp-Method headers) so a strict RC server can't
+ * reject our own request and yield a false "not ready".
  *
- * TODO(verify): exact method name, required routing headers on this call,
- * and expected result shape — check the RC spec before trusting this probe.
+ * fail is reserved for positive legacy signals — an unimplemented method or a
+ * legacy session lifecycle. Anything ambiguous (including a discover result we
+ * can't parse) is a warn, never a fail.
  */
-export const discover: CheckDefinition = {
-  id: "discover",
-  title: "server/discover supported",
-  why: "Replaces the initialize handshake in the 2026-07-28 stateless core.",
-  fixUrl:
-    "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
-  async run(ctx) {
-    const res = await postJsonRpc(ctx.url, "server/discover", {}, {
-      timeoutMs: ctx.timeoutMs,
-      headers: { ...ctx.headers, "Mcp-Method": "server/discover" },
-    });
-    const code = rpcErrorCode(res.body);
-    if (code === -32601) {
-      return {
-        status: "fail",
-        detail: "server/discover returned method-not-found (-32601) — server has not migrated",
-      };
-    }
-    if (res.httpStatus >= 200 && res.httpStatus < 300 && res.body !== undefined) {
-      // TODO(verify): validate the discover result shape against the RC schema.
-      return { status: "pass", detail: "server/discover answered with a JSON body" };
+import { postNext, rpcErrorCode, isSessionRejection, rpcResult } from "../client.js";
+import { ERROR, FIX_URLS, TARGET_PROTOCOL_VERSION } from "../spec.js";
+import type { CheckDefinition, CheckStatus } from "../types.js";
+
+export function interpretDiscover(
+  httpStatus: number,
+  body: unknown,
+): { status: CheckStatus; detail: string } {
+  const result = rpcResult(body);
+  if (result && Array.isArray(result["supportedVersions"])) {
+    const versions = (result["supportedVersions"] as unknown[]).filter(
+      (v): v is string => typeof v === "string",
+    );
+    if (versions.includes(TARGET_PROTOCOL_VERSION)) {
+      return { status: "pass", detail: `server/discover advertises ${versions.join(", ")}` };
     }
     return {
       status: "warn",
-      detail: `Ambiguous response (HTTP ${res.httpStatus}) — inspect manually`,
+      detail: `server/discover works but doesn't list ${TARGET_PROTOCOL_VERSION} (advertises ${
+        versions.join(", ") || "no versions"
+      })`,
     };
+  }
+  if (result) {
+    return {
+      status: "warn",
+      detail: "server/discover answered but with an unexpected shape (no supportedVersions array)",
+    };
+  }
+
+  if (isSessionRejection(httpStatus, body)) {
+    return {
+      status: "fail",
+      detail:
+        "server requires a legacy session before any request — a pre-2026-07-28 lifecycle with no server/discover",
+    };
+  }
+
+  const code = rpcErrorCode(body);
+  if (code === ERROR.methodNotFound || httpStatus === 404) {
+    return {
+      status: "fail",
+      detail:
+        "server/discover is not implemented (method-not-found) — server has not migrated to the 2026-07-28 stateless core",
+    };
+  }
+
+  if (code === ERROR.invalidParams || code === -32600 || code === ERROR.headerMismatch) {
+    return {
+      status: "warn",
+      detail: `server rejected the server/discover probe (code ${code}) — it may speak 2026-07-28 but this couldn't be confirmed`,
+    };
+  }
+
+  return {
+    status: "warn",
+    detail: `ambiguous response to server/discover (HTTP ${httpStatus}${
+      code !== undefined ? `, code ${code}` : ""
+    })`,
+  };
+}
+
+export const discover: CheckDefinition = {
+  id: "discover",
+  title: "server/discover supported",
+  why: "Replaces the initialize handshake in the 2026-07-28 stateless core; servers MUST implement it.",
+  fixUrl: FIX_URLS.discover,
+  async run(ctx) {
+    const res = await postNext(ctx.url, "server/discover", {}, {
+      timeoutMs: ctx.timeoutMs,
+      headers: ctx.headers,
+    });
+    return interpretDiscover(res.httpStatus, res.body);
   },
 };

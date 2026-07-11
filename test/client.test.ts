@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { parseSseJson, rpcErrorCode } from "../src/client.js";
+import {
+  buildNextRequest,
+  isSessionRejection,
+  parseSseJson,
+  rpcErrorCode,
+  rpcErrorMessage,
+} from "../src/client.js";
+import { HEADERS, META_KEYS, TARGET_PROTOCOL_VERSION } from "../src/spec.js";
 
 describe("parseSseJson", () => {
   it("extracts a single data event", () => {
@@ -82,5 +89,115 @@ describe("rpcErrorCode", () => {
     expect(rpcErrorCode({ error: { code: "-32602" } })).toBeUndefined();
     expect(rpcErrorCode(undefined)).toBeUndefined();
     expect(rpcErrorCode("nope")).toBeUndefined();
+  });
+});
+
+describe("rpcErrorMessage", () => {
+  it("extracts the error message", () => {
+    expect(rpcErrorMessage({ error: { code: -32000, message: "No valid session ID" } })).toBe(
+      "No valid session ID",
+    );
+  });
+  it("returns undefined when absent", () => {
+    expect(rpcErrorMessage({ result: {} })).toBeUndefined();
+    expect(rpcErrorMessage(undefined)).toBeUndefined();
+  });
+});
+
+describe("isSessionRejection", () => {
+  it("true for the old SDK's session-less rejection", () => {
+    expect(
+      isSessionRejection(400, {
+        jsonrpc: "2.0",
+        id: null,
+        error: { code: -32000, message: "Bad Request: No valid session ID provided" },
+      }),
+    ).toBe(true);
+  });
+  it("true for a 'Server not initialized' message", () => {
+    expect(isSessionRejection(400, { error: { code: -32602, message: "Server not initialized" } })).toBe(
+      true,
+    );
+  });
+  it("false for modern header-mismatch and version errors (no session wording)", () => {
+    expect(isSessionRejection(400, { error: { code: -32020, message: "Header mismatch" } })).toBe(false);
+    expect(
+      isSessionRejection(400, { error: { code: -32022, message: "Unsupported protocol version" } }),
+    ).toBe(false);
+  });
+  it("false when there is no error message", () => {
+    expect(isSessionRejection(200, { result: {} })).toBe(false);
+  });
+});
+
+describe("buildNextRequest", () => {
+  it("injects the three required _meta identity keys", () => {
+    const { params } = buildNextRequest("tools/list", {});
+    const meta = params["_meta"] as Record<string, unknown>;
+    expect(meta[META_KEYS.protocolVersion]).toBe(TARGET_PROTOCOL_VERSION);
+    expect(meta[META_KEYS.clientInfo]).toEqual({ name: "mcp-ready", version: "0.0.1" });
+    expect(meta[META_KEYS.clientCapabilities]).toEqual({});
+  });
+
+  it("sets the protocol-version and Mcp-Method headers", () => {
+    const { headers } = buildNextRequest("tools/list", {});
+    expect(headers[HEADERS.protocolVersion]).toBe(TARGET_PROTOCOL_VERSION);
+    expect(headers[HEADERS.method]).toBe("tools/list");
+    expect(headers[HEADERS.name]).toBeUndefined();
+  });
+
+  it("adds Mcp-Name from params.name for tools/call", () => {
+    const { headers } = buildNextRequest("tools/call", { name: "get_weather" });
+    expect(headers[HEADERS.name]).toBe("get_weather");
+  });
+
+  it("adds Mcp-Name from params.uri for resources/read", () => {
+    const { headers } = buildNextRequest("resources/read", { uri: "file:///x" });
+    expect(headers[HEADERS.name]).toBe("file:///x");
+  });
+
+  it("omits Mcp-Name for methods that don't require it", () => {
+    expect(buildNextRequest("prompts/list", {}).headers[HEADERS.name]).toBeUndefined();
+  });
+
+  it("preserves caller-supplied _meta keys", () => {
+    const { params } = buildNextRequest("tools/list", {
+      _meta: { "io.modelcontextprotocol/logLevel": "debug" },
+    });
+    const meta = params["_meta"] as Record<string, unknown>;
+    expect(meta["io.modelcontextprotocol/logLevel"]).toBe("debug");
+    expect(meta[META_KEYS.protocolVersion]).toBe(TARGET_PROTOCOL_VERSION);
+  });
+
+  it("lets headerOverrides replace a routing header (mismatch probe)", () => {
+    const { headers } = buildNextRequest("tools/list", {}, {
+      headerOverrides: { [HEADERS.method]: "prompts/get" },
+    });
+    expect(headers[HEADERS.method]).toBe("prompts/get");
+  });
+
+  it("lets headerOverrides drop a routing header with null (absence probe)", () => {
+    const { headers } = buildNextRequest("tools/list", {}, {
+      headerOverrides: { [HEADERS.method]: null },
+    });
+    expect(headers[HEADERS.method]).toBeUndefined();
+  });
+
+  it("applies a protocolVersion override to both the header and _meta", () => {
+    const { params, headers } = buildNextRequest("tools/list", {}, {
+      protocolVersion: "2025-11-25",
+    });
+    expect(headers[HEADERS.protocolVersion]).toBe("2025-11-25");
+    expect((params["_meta"] as Record<string, unknown>)[META_KEYS.protocolVersion]).toBe(
+      "2025-11-25",
+    );
+  });
+
+  it("merges caller headers (e.g. Authorization)", () => {
+    const { headers } = buildNextRequest("tools/list", {}, {
+      headers: { Authorization: "Bearer xyz" },
+    });
+    expect(headers["Authorization"]).toBe("Bearer xyz");
+    expect(headers[HEADERS.method]).toBe("tools/list");
   });
 });

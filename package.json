@@ -17,6 +17,11 @@
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "refs:install": "npm --prefix ref-servers install",
+    "refs:old": "npm --prefix ref-servers run start:old",
+    "refs:rc": "npm --prefix ref-servers run start:rc",
+    "verify:refs": "tsx scripts/verify-refs.ts",
+    "verify:conformance": "npx -y @modelcontextprotocol/conformance@alpha server --url http://127.0.0.1:7102/mcp",
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [

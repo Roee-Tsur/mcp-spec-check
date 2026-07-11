@@ -59,47 +59,51 @@ async function main(): Promise<void> {
   };
 
   const preflight = await classifyEndpoint(ctx);
+  ctx.preflight = preflight;
 
-  let results: CheckResult[];
-  // TODO(M1): once auth-metadata is implemented it must still run in the
-  // non-open branch — its /.well-known probe is origin-level and works
-  // through auth walls (it's the one check that yields signal on 401 servers).
-  if (preflight.access !== "open") {
-    const detail =
-      preflight.access === "auth-required"
-        ? "endpoint is auth-required — pass --bearer to probe authenticated servers"
-        : `endpoint is ${preflight.access} — couldn't test`;
-    results = allChecks.map((check) => ({
-      id: check.id,
-      title: check.title,
-      status: "skipped" as const,
-      detail,
-      fixUrl: check.fixUrl,
-    }));
-  } else {
-    results = [];
-    for (const check of allChecks) {
-      try {
-        const partial = await check.run(ctx);
-        results.push({ id: check.id, title: check.title, fixUrl: check.fixUrl, ...partial });
-      } catch (err) {
-        if (err instanceof NotImplementedError) {
-          results.push({
-            id: check.id,
-            title: check.title,
-            status: "todo",
-            detail: err.note,
-            fixUrl: check.fixUrl,
-          });
-        } else {
-          results.push({
-            id: check.id,
-            title: check.title,
-            status: "error",
-            detail: err instanceof Error ? err.message : String(err),
-            fixUrl: check.fixUrl,
-          });
-        }
+  // A check runs when the endpoint is open, or when it's auth-walled AND the
+  // check opts into running there (auth-metadata: its /.well-known probe is
+  // origin-level and works outside the auth wall). Everything else is skipped.
+  const skipDetail =
+    preflight.access === "auth-required"
+      ? "endpoint is auth-required — pass --bearer to probe authenticated checks"
+      : `endpoint is ${preflight.access} — couldn't test`;
+
+  const results: CheckResult[] = [];
+  for (const check of allChecks) {
+    const shouldRun =
+      preflight.access === "open" ||
+      (preflight.access === "auth-required" && check.runsWhenAuthWalled === true);
+    if (!shouldRun) {
+      results.push({
+        id: check.id,
+        title: check.title,
+        status: "skipped",
+        detail: skipDetail,
+        fixUrl: check.fixUrl,
+      });
+      continue;
+    }
+    try {
+      const partial = await check.run(ctx);
+      results.push({ id: check.id, title: check.title, fixUrl: check.fixUrl, ...partial });
+    } catch (err) {
+      if (err instanceof NotImplementedError) {
+        results.push({
+          id: check.id,
+          title: check.title,
+          status: "todo",
+          detail: err.note,
+          fixUrl: check.fixUrl,
+        });
+      } else {
+        results.push({
+          id: check.id,
+          title: check.title,
+          status: "error",
+          detail: err instanceof Error ? err.message : String(err),
+          fixUrl: check.fixUrl,
+        });
       }
     }
   }
