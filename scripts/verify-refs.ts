@@ -9,8 +9,9 @@
  *
  * Run:  npm run verify:refs      (from repo root, under Node 22)
  *
- * Not wired into `npm test` — it needs ref-servers/ installed, which CI doesn't
- * have yet (deferred to Milestone 2).
+ * Kept out of `npm test` (which stays pure/offline) because it needs ref-servers/
+ * installed. CI runs it as a dedicated `verify-refs` job that installs those deps
+ * first — see .github/workflows/ci.yml.
  */
 import { spawn, type ChildProcess } from "node:child_process";
 import { createServer, type Server } from "node:http";

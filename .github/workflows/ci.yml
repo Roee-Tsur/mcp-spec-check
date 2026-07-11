@@ -21,3 +21,22 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+
+  # Live oracle: run the CLI end-to-end against both reference servers (old-spec
+  # + RC) and an inline auth-walled fixture, asserting the full verdict matrix.
+  # The script spawns and tears down every server itself; it just needs the
+  # ref-servers deps installed alongside the root devDeps.
+  verify-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            ref-servers/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix ref-servers
+      - run: npm run verify:refs
