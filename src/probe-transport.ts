@@ -25,6 +25,7 @@ import {
 } from "./client.js";
 import { LEGACY_PROTOCOL_VERSION } from "./spec.js";
 import type { ProbeContext } from "./types.js";
+import { CLIENT_INFO } from "./version.js";
 
 export type TransportMode = "next" | "legacy-session" | "none";
 
@@ -87,7 +88,7 @@ export async function acquireTransport(ctx: ProbeContext): Promise<Transport> {
     {
       protocolVersion: LEGACY_PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: "mcp-ready", version: "0.0.1" },
+      clientInfo: CLIENT_INFO,
     },
     { timeoutMs: ctx.timeoutMs, headers: ctx.headers },
   );

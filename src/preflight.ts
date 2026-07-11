@@ -13,6 +13,7 @@
 
 import { isJsonRpcResponse, postJsonRpc } from "./client.js";
 import type { Preflight, ProbeContext } from "./types.js";
+import { CLIENT_INFO } from "./version.js";
 
 function protocolVersionOf(body: unknown): string | undefined {
   if (!isJsonRpcResponse(body)) return undefined;
@@ -81,7 +82,7 @@ export async function classifyEndpoint(ctx: ProbeContext): Promise<Preflight> {
       {
         protocolVersion: "2025-11-25",
         capabilities: {},
-        clientInfo: { name: "mcp-ready", version: "0.0.1" },
+        clientInfo: CLIENT_INFO,
       },
       { timeoutMs: ctx.timeoutMs, headers: ctx.headers },
     );

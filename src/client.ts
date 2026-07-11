@@ -11,6 +11,7 @@
  * (built by the pure `buildNextRequest`, which the checks lean on).
  */
 import { HEADERS, MCP_NAME_METHODS, META_KEYS, TARGET_PROTOCOL_VERSION } from "./spec.js";
+import { CLIENT_INFO } from "./version.js";
 
 export interface RpcResponse {
   httpStatus: number;
@@ -189,9 +190,6 @@ export function isSessionRejection(httpStatus: number, body: unknown): boolean {
   const message = rpcErrorMessage(body);
   return message !== undefined && /session|not initialized/i.test(message);
 }
-
-/** Identity mcp-ready presents in the _meta clientInfo of every next-mode request. */
-const CLIENT_INFO = { name: "mcp-ready", version: "0.0.1" } as const;
 
 export interface NextRequestOptions {
   /** Existing headers to merge in first (e.g. Authorization). */

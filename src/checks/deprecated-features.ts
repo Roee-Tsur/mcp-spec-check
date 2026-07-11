@@ -10,6 +10,7 @@
 import { isJsonRpcResponse, postJsonRpc, postNext, rpcResult } from "../client.js";
 import { DEPRECATED_CAPABILITIES, FIX_URLS, LEGACY_PROTOCOL_VERSION } from "../spec.js";
 import type { CheckDefinition, CheckStatus } from "../types.js";
+import { CLIENT_INFO } from "../version.js";
 
 function capabilitiesOf(body: unknown): Record<string, unknown> | undefined {
   const result = rpcResult(body);
@@ -68,7 +69,7 @@ export const deprecatedFeatures: CheckDefinition = {
         {
           protocolVersion: LEGACY_PROTOCOL_VERSION,
           capabilities: {},
-          clientInfo: { name: "mcp-ready", version: "0.0.1" },
+          clientInfo: CLIENT_INFO,
         },
         opts,
       );

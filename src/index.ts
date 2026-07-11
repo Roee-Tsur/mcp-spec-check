@@ -4,8 +4,7 @@ import { allChecks } from "./checks/index.js";
 import { classifyEndpoint } from "./preflight.js";
 import { buildReport, exitCode, renderTerminal } from "./report.js";
 import { NotImplementedError, type CheckResult, type ProbeContext } from "./types.js";
-
-const VERSION = "0.0.1";
+import { VERSION } from "./version.js";
 
 function usage(): void {
   console.log(`

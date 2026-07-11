@@ -7,6 +7,7 @@ import {
   rpcErrorMessage,
 } from "../src/client.js";
 import { HEADERS, META_KEYS, TARGET_PROTOCOL_VERSION } from "../src/spec.js";
+import { CLIENT_INFO } from "../src/version.js";
 
 describe("parseSseJson", () => {
   it("extracts a single data event", () => {
@@ -135,7 +136,7 @@ describe("buildNextRequest", () => {
     const { params } = buildNextRequest("tools/list", {});
     const meta = params["_meta"] as Record<string, unknown>;
     expect(meta[META_KEYS.protocolVersion]).toBe(TARGET_PROTOCOL_VERSION);
-    expect(meta[META_KEYS.clientInfo]).toEqual({ name: "mcp-ready", version: "0.0.1" });
+    expect(meta[META_KEYS.clientInfo]).toEqual(CLIENT_INFO);
     expect(meta[META_KEYS.clientCapabilities]).toEqual({});
   });
 
