@@ -1,6 +1,6 @@
 {
   "name": "mcp-spec-check",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Is your remote MCP server ready for the MCP 2026-07-28 spec release? Zero-install black-box readiness probe.",
   "type": "module",
   "bin": {
