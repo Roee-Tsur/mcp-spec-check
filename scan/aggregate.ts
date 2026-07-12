@@ -20,7 +20,7 @@ import { allChecks } from "../src/checks/index.js";
 import { REQUIRED_CHECK_IDS } from "../src/report.js";
 import type { CheckStatus, Readiness, Report } from "../src/types.js";
 import type { Funnel } from "./registry.js";
-import { isMain, resolveDate, runPaths } from "./paths.js";
+import { isMain, resolveRunDate, runPaths } from "./paths.js";
 import type { Envelope } from "./types.js";
 
 const ALL_CHECK_IDS = allChecks.map((c) => c.id);
@@ -443,7 +443,7 @@ export function renderSummaryMd(agg: Aggregates): string {
   return L.join("\n");
 }
 
-export function aggregateScan(date = resolveDate()): Aggregates {
+export function aggregateScan(date = resolveRunDate("attach")): Aggregates {
   const p = runPaths(date);
   const funnel = JSON.parse(readFileSync(p.funnel, "utf8")) as Funnel;
   const files = readdirSync(p.reportsDir).filter((f) => f.endsWith(".json") && !f.endsWith(".tmp"));

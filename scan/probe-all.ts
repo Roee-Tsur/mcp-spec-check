@@ -21,7 +21,7 @@ import { probeServer } from "../src/probe.js";
 import type { ProbeContext } from "../src/types.js";
 import { REPO_URL, VERSION } from "../src/version.js";
 import { groupByHost, type Target } from "./registry.js";
-import { isMain, resolveDate, runPaths, urlHash, type RunPaths } from "./paths.js";
+import { isMain, resolveRunDate, runPaths, urlHash, type RunPaths } from "./paths.js";
 import type { Envelope, ProbeOutcome } from "./types.js";
 
 const SCAN_UA = `mcp-spec-check-scan/${VERSION} (+${REPO_URL})`;
@@ -133,8 +133,9 @@ export interface ProbeAllOptions {
   limit?: number;
 }
 
-export async function probeAll(date = resolveDate(), opts: ProbeAllOptions = {}): Promise<void> {
+export async function probeAll(date = resolveRunDate("attach"), opts: ProbeAllOptions = {}): Promise<void> {
   const p = runPaths(date);
+  process.stdout.write(`Run dir: ${p.dir}\n`);
   const all = JSON.parse(readFileSync(p.targets, "utf8")) as Target[];
   const targets = opts.limit ? all.slice(0, opts.limit) : all;
   const concurrency = opts.concurrency ?? DEFAULT_CONCURRENCY;
@@ -216,7 +217,7 @@ function parseCliOptions(args: string[]): ProbeAllOptions {
 }
 
 if (isMain(import.meta.url)) {
-  probeAll(resolveDate(), parseCliOptions(argv.slice(2))).catch((err) => {
+  probeAll(resolveRunDate("attach"), parseCliOptions(argv.slice(2))).catch((err) => {
     console.error("probe-all fatal:", err);
     process.exit(1);
   });

@@ -6,10 +6,10 @@
  */
 import { aggregateScan } from "./aggregate.js";
 import { fetchRegistry } from "./fetch-registry.js";
-import { isMain, resolveDate } from "./paths.js";
+import { isMain, resolveRunDate } from "./paths.js";
 import { probeAll, type ProbeAllOptions } from "./probe-all.js";
 
-export async function runScan(date = resolveDate(), probeOpts: ProbeAllOptions = {}): Promise<void> {
+export async function runScan(date = resolveRunDate("new"), probeOpts: ProbeAllOptions = {}): Promise<void> {
   await fetchRegistry(date);
   await probeAll(date, probeOpts);
   aggregateScan(date);

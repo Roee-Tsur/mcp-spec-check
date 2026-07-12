@@ -12,7 +12,7 @@ import { writeFileSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 import { REPO_URL, VERSION } from "../src/version.js";
 import { buildTargets, type RegistryEntry } from "./registry.js";
-import { ensureRunDirs, isMain, resolveDate, runPaths } from "./paths.js";
+import { ensureRunDirs, isMain, resolveRunDate, runPaths } from "./paths.js";
 
 const REGISTRY_URL = "https://registry.modelcontextprotocol.io/v0/servers";
 const PAGE_LIMIT = 100;
@@ -73,7 +73,7 @@ export interface FetchResult {
   targets: number;
 }
 
-export async function fetchRegistry(date = resolveDate()): Promise<FetchResult> {
+export async function fetchRegistry(date = resolveRunDate("new")): Promise<FetchResult> {
   const p = runPaths(date);
   ensureRunDirs(p);
   process.stdout.write(`Fetching registry snapshot → ${p.dir}\n`);

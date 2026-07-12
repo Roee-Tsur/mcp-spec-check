@@ -26,15 +26,25 @@ export function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/**
- * Resolve the run date from `--date YYYY-MM-DD`, then $SCAN_DATE, else today.
- * Pinning a date lets fetch → probe → aggregate share one directory across a
- * multi-hour (possibly midnight-crossing) run and makes re-runs resumable.
- */
-export function resolveDate(args: string[] = argv.slice(2)): string {
+/** An explicitly-pinned run date from `--date YYYY-MM-DD` or $SCAN_DATE, if any. */
+export function explicitDate(args: string[] = argv.slice(2)): string | undefined {
   const flagIdx = args.indexOf("--date");
   if (flagIdx >= 0 && args[flagIdx + 1]) return args[flagIdx + 1] as string;
-  if (process.env.SCAN_DATE) return process.env.SCAN_DATE;
+  return process.env.SCAN_DATE || undefined;
+}
+
+/**
+ * Resolve which run directory a step operates on:
+ *  - "new"    (fetch, chain): explicit date, else today — start/overwrite a run.
+ *  - "attach" (probe, aggregate): explicit date, else the LATEST existing run,
+ *    else today. This is what makes a killed run resumable across midnight —
+ *    `npm run scan:probe` re-attaches to the same dir and skips finished targets
+ *    instead of silently starting a fresh (empty) run under the new day's date.
+ */
+export function resolveRunDate(mode: "new" | "attach"): string {
+  const explicit = explicitDate();
+  if (explicit) return explicit;
+  if (mode === "attach") return latestRunDate() ?? today();
   return today();
 }
 
