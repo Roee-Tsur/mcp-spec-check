@@ -57,13 +57,13 @@ const PANEL: PanelEntry[] = [
     label: "DeepWiki",
     url: "https://mcp.deepwiki.com/mcp",
     expect: { access: "open", readiness: "unknown" },
-    note: "answers legacy initialize, -32600s the 2026-07-28 probes → mostly inconclusive; RE-VERIFY URL",
+    note: "answers legacy initialize, -32600s the 2026-07-28 probes → mostly inconclusive (verified live 2026-07-12)",
   },
   {
     label: "Hugging Face MCP",
     url: "https://huggingface.co/mcp",
     expect: { access: "open", readiness: "not-ready" },
-    note: "open, legacy server → required checks fail, 0 inconclusive; RE-VERIFY URL",
+    note: "open, legacy server → required checks fail (verified live 2026-07-12)",
   },
 ];
 
