@@ -20,3 +20,15 @@ export const VERSION: string = pkg.version;
 
 /** Identity mcp-spec-check presents in the _meta clientInfo of every request. */
 export const CLIENT_INFO = { name: "mcp-spec-check", version: VERSION } as const;
+
+/** Repository URL, embedded in the User-Agent so probed hosts can find who's probing. */
+export const REPO_URL = "https://github.com/Roee-Tsur/mcp-spec-check";
+
+/**
+ * Default User-Agent on every probe request. Node's fetch otherwise sends
+ * `node`, which is opaque to a server operator inspecting their logs — a named,
+ * repo-linked UA is the polite default (and the scan overrides it with its own
+ * scan-specific UA via ctx.headers). Lowercased so a caller-supplied
+ * `user-agent` in opts.headers cleanly overrides it.
+ */
+export const USER_AGENT = `mcp-spec-check/${VERSION} (+${REPO_URL})`;

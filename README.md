@@ -13,7 +13,9 @@ The [MCP 2026-07-28 release](https://blog.modelcontextprotocol.io/posts/2026-07-
 
 ## What it checks
 
-Only the first three can fail a server; the rest are `warn` — optional or forward-looking, never counted as "not ready" on their own.
+The report leads with a one-line verdict — **`ready for 2026-07-28: YES / NO / UNKNOWN`** — decided *only* by the three required checks below (`discover`, `routing-headers`, `session-independence`): all three pass → `YES`, any fails → `NO`, otherwise `UNKNOWN`. A letter grade over every check follows as a secondary signal.
+
+Only those first three can fail a server; the rest are `warn` — optional or forward-looking, never counted as "not ready" on their own.
 
 A check the server answers too ambiguously to judge is marked `inconclusive` and — like a skipped check — doesn't count toward the grade. If too many land there, the tool reports grade `?` ("couldn't assess", exit 2) rather than guess.
 

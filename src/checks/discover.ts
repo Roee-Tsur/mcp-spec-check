@@ -16,20 +16,24 @@ import type { CheckDefinition, CheckStatus } from "../types.js";
 export function interpretDiscover(
   httpStatus: number,
   body: unknown,
-): { status: CheckStatus; detail: string } {
+): { status: CheckStatus; detail: string; data?: Record<string, unknown> } {
   const result = rpcResult(body);
   if (result && Array.isArray(result["supportedVersions"])) {
     const versions = (result["supportedVersions"] as unknown[]).filter(
       (v): v is string => typeof v === "string",
     );
+    // Surface the advertised versions for the scan's version histogram, on both
+    // the pass (lists the target) and warn (works but omits it) branches.
+    const data = { supportedVersions: versions };
     if (versions.includes(TARGET_PROTOCOL_VERSION)) {
-      return { status: "pass", detail: `server/discover advertises ${versions.join(", ")}` };
+      return { status: "pass", detail: `server/discover advertises ${versions.join(", ")}`, data };
     }
     return {
       status: "warn",
       detail: `server/discover works but doesn't list ${TARGET_PROTOCOL_VERSION} (advertises ${
         versions.join(", ") || "no versions"
       })`,
+      data,
     };
   }
   if (result) {

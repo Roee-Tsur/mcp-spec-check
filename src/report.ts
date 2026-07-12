@@ -1,4 +1,4 @@
-import type { CheckResult, Preflight, Report } from "./types.js";
+import type { CheckResult, Preflight, Readiness, Report } from "./types.js";
 
 const c = {
   green: (s: string) => `\x1b[32m${s}\x1b[0m`,
@@ -48,11 +48,39 @@ export function grade(results: CheckResult[]): string {
   return "F";
 }
 
+/**
+ * The spec-required checks that decide readiness — the three fail-able,
+ * mandatory-behavior probes. Optional/forward-looking checks (cache-metadata,
+ * mrtr, error-codes, deprecated-features, auth-metadata) inform the adoption
+ * matrix and the letter grade, but never the ready/not-ready verdict.
+ */
+export const REQUIRED_CHECK_IDS = ["discover", "routing-headers", "session-independence"] as const;
+
+/**
+ * Headline verdict, decoupled from the letter grade:
+ *  - "ready"      → every required check passed
+ *  - "not-ready"  → at least one required check failed
+ *  - "unknown"    → a required check couldn't be decided (inconclusive / skipped
+ *                   / error / warn), e.g. an auth-walled or ambiguous endpoint
+ *
+ * A required `fail` dominates a required `unknown`: a server with one hard fail
+ * is not-ready even if another required check was inconclusive.
+ */
+export function readiness(results: CheckResult[]): Readiness {
+  const required = results.filter((r) => (REQUIRED_CHECK_IDS as readonly string[]).includes(r.id));
+  if (required.some((r) => r.status === "fail")) return "not-ready";
+  if (required.length === REQUIRED_CHECK_IDS.length && required.every((r) => r.status === "pass")) {
+    return "ready";
+  }
+  return "unknown";
+}
+
 export function buildReport(
   url: string,
   toolVersion: string,
   preflight: Preflight,
   results: CheckResult[],
+  protocol?: Report["protocol"],
 ): Report {
   return {
     url,
@@ -61,6 +89,8 @@ export function buildReport(
     targetSpec: "2026-07-28",
     preflight,
     results,
+    readiness: readiness(results),
+    ...(protocol ? { protocol } : {}),
     grade: grade(results),
     summary: summarize(results),
   };
@@ -79,6 +109,13 @@ export function renderTerminal(report: Report): string {
     if (r.status === "fail" && r.fixUrl) lines.push(`    ${c.dim(`fix: ${r.fixUrl}`)}`);
   }
   lines.push("");
+  const verdict =
+    report.readiness === "ready"
+      ? c.green("YES")
+      : report.readiness === "not-ready"
+        ? c.red("NO")
+        : c.dim("UNKNOWN");
+  lines.push(`  ${c.bold("ready for 2026-07-28:")} ${verdict}`);
   const s = report.summary;
   lines.push(
     `  grade: ${c.bold(report.grade)}   ` +

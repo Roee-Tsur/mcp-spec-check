@@ -62,6 +62,17 @@ export function speaksNext(res: RpcResponse): boolean {
   return code !== undefined && MODERN_ERROR_CODES.has(code);
 }
 
+/**
+ * Memoized transport for the probe: acquire once, share across every check.
+ * Legacy-session servers establish one session that all four transport-using
+ * checks replay (instead of a fresh initialize per check), and the RC path
+ * likewise avoids re-probing tools/list. Stored on `ctx.transport` so the same
+ * ProbeContext yields the same Transport for the life of the probe.
+ */
+export function getTransport(ctx: ProbeContext): Promise<Transport> {
+  return (ctx.transport ??= acquireTransport(ctx));
+}
+
 export async function acquireTransport(ctx: ProbeContext): Promise<Transport> {
   // 1. Try 2026-07-28 next mode.
   const probe = await postNext(ctx.url, "tools/list", {}, {

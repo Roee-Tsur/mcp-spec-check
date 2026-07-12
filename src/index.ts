@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import { parseArgs } from "./args.js";
-import { allChecks } from "./checks/index.js";
-import { classifyEndpoint } from "./preflight.js";
-import { buildReport, exitCode, renderTerminal } from "./report.js";
-import { NotImplementedError, type CheckResult, type ProbeContext } from "./types.js";
+import { probeServer } from "./probe.js";
+import { exitCode, renderTerminal } from "./report.js";
+import { type ProbeContext } from "./types.js";
 import { VERSION } from "./version.js";
 
 function usage(): void {
@@ -58,57 +57,7 @@ async function main(): Promise<void> {
     headers: args.headers,
   };
 
-  const preflight = await classifyEndpoint(ctx);
-  ctx.preflight = preflight;
-
-  // A check runs when the endpoint is open, or when it's auth-walled AND the
-  // check opts into running there (auth-metadata: its /.well-known probe is
-  // origin-level and works outside the auth wall). Everything else is skipped.
-  const skipDetail =
-    preflight.access === "auth-required"
-      ? "endpoint is auth-required — pass --bearer to probe authenticated checks"
-      : `endpoint is ${preflight.access} — couldn't test`;
-
-  const results: CheckResult[] = [];
-  for (const check of allChecks) {
-    const shouldRun =
-      preflight.access === "open" ||
-      (preflight.access === "auth-required" && check.runsWhenAuthWalled === true);
-    if (!shouldRun) {
-      results.push({
-        id: check.id,
-        title: check.title,
-        status: "skipped",
-        detail: skipDetail,
-        fixUrl: check.fixUrl,
-      });
-      continue;
-    }
-    try {
-      const partial = await check.run(ctx);
-      results.push({ id: check.id, title: check.title, fixUrl: check.fixUrl, ...partial });
-    } catch (err) {
-      if (err instanceof NotImplementedError) {
-        results.push({
-          id: check.id,
-          title: check.title,
-          status: "todo",
-          detail: err.note,
-          fixUrl: check.fixUrl,
-        });
-      } else {
-        results.push({
-          id: check.id,
-          title: check.title,
-          status: "error",
-          detail: err instanceof Error ? err.message : String(err),
-          fixUrl: check.fixUrl,
-        });
-      }
-    }
-  }
-
-  const report = buildReport(ctx.url, VERSION, preflight, results);
+  const report = await probeServer(ctx);
   if (args.json) {
     console.log(JSON.stringify(report, null, 2));
   } else {

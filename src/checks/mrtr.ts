@@ -13,7 +13,7 @@
  * SSE stream for old clients, so it never affects the verdict.
  */
 import { getProbe, rpcResult, type GetProbeResult } from "../client.js";
-import { acquireTransport } from "../probe-transport.js";
+import { getTransport } from "../probe-transport.js";
 import { FIX_URLS, RESULT_TYPES } from "../spec.js";
 import type { CheckDefinition, CheckStatus } from "../types.js";
 
@@ -50,7 +50,7 @@ export const mrtr: CheckDefinition = {
   why: "2026-07-28 replaces server-initiated requests with Multi Round-Trip Requests; every result carries a required resultType field.",
   fixUrl: FIX_URLS.mrtr,
   async run(ctx) {
-    const t = await acquireTransport(ctx);
+    const t = await getTransport(ctx);
     const get = await getProbe(ctx.url, {
       accept: "text/event-stream",
       timeoutMs: ctx.timeoutMs,

@@ -11,7 +11,7 @@
  * (built by the pure `buildNextRequest`, which the checks lean on).
  */
 import { HEADERS, MCP_NAME_METHODS, META_KEYS, TARGET_PROTOCOL_VERSION } from "./spec.js";
-import { CLIENT_INFO } from "./version.js";
+import { CLIENT_INFO, USER_AGENT } from "./version.js";
 
 export interface RpcResponse {
   httpStatus: number;
@@ -44,6 +44,7 @@ export async function postJsonRpc(
       headers: {
         "content-type": "application/json",
         accept: "application/json, text/event-stream",
+        "user-agent": USER_AGENT,
         ...opts.headers,
       },
       body: JSON.stringify({ jsonrpc: "2.0", id: nextId++, method, params }),
@@ -293,7 +294,7 @@ export async function getProbe(
     const res = await fetch(url, {
       method: "GET",
       signal: controller.signal,
-      headers: { accept: opts.accept ?? "text/event-stream", ...opts.headers },
+      headers: { accept: opts.accept ?? "text/event-stream", "user-agent": USER_AGENT, ...opts.headers },
     });
     await res.body?.cancel().catch(() => {});
     return {
@@ -323,7 +324,7 @@ export async function getJson(
     const res = await fetch(url, {
       method: "GET",
       signal: controller.signal,
-      headers: { accept: "application/json", ...opts.headers },
+      headers: { accept: "application/json", "user-agent": USER_AGENT, ...opts.headers },
     });
     const raw = await res.text();
     let body: unknown;

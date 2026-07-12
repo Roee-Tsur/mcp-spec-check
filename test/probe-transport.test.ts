@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { speaksNext } from "../src/probe-transport.js";
+import { getTransport, speaksNext, type Transport } from "../src/probe-transport.js";
 import type { RpcResponse } from "../src/client.js";
+import type { ProbeContext } from "../src/types.js";
 
 const res = (httpStatus: number, body: unknown): RpcResponse => ({
   httpStatus,
@@ -43,5 +44,20 @@ describe("speaksNext", () => {
     expect(
       speaksNext(res(500, { jsonrpc: "2.0", id: 1, error: { code: -32000, message: "boom" } })),
     ).toBe(false);
+  });
+});
+
+describe("getTransport", () => {
+  it("returns the already-memoized transport without re-acquiring", () => {
+    // Pre-seed ctx.transport: getTransport must hand back that exact promise
+    // (the `??=` memoization) rather than kick off a fresh network acquisition.
+    const fake: Promise<Transport> = Promise.resolve({
+      mode: "next",
+      detail: "seeded",
+      send: async () => res(200, { jsonrpc: "2.0", id: 1, result: {} }),
+    });
+    const ctx = { url: "http://x", timeoutMs: 1, verbose: false, headers: {}, transport: fake } as ProbeContext;
+    expect(getTransport(ctx)).toBe(fake);
+    expect(getTransport(ctx)).toBe(fake);
   });
 });

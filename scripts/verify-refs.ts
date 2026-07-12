@@ -23,10 +23,13 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 type Status = "pass" | "fail" | "warn" | "todo" | "error" | "skipped";
 
+type Readiness = "ready" | "not-ready" | "unknown";
+
 interface Expectation {
   url: string;
   exitCode: number;
   grade: string;
+  readiness: Readiness;
   checks: Record<string, Status>;
 }
 
@@ -42,6 +45,7 @@ const EXPECTED: Record<string, Expectation> = {
     url: RC_URL,
     exitCode: 0,
     grade: "A",
+    readiness: "ready",
     checks: {
       discover: "pass",
       "routing-headers": "pass",
@@ -57,6 +61,7 @@ const EXPECTED: Record<string, Expectation> = {
     url: OLD_URL,
     exitCode: 1,
     grade: "F",
+    readiness: "not-ready",
     checks: {
       discover: "fail",
       "routing-headers": "fail",
@@ -74,6 +79,7 @@ const EXPECTED: Record<string, Expectation> = {
     url: AUTH_URL,
     exitCode: 2,
     grade: "?",
+    readiness: "unknown",
     checks: {
       discover: "skipped",
       "routing-headers": "skipped",
@@ -97,6 +103,7 @@ const EXPECTED: Record<string, Expectation> = {
     url: AMBIG_URL,
     exitCode: 2,
     grade: "?",
+    readiness: "unknown",
     checks: {
       discover: "inconclusive",
       "routing-headers": "inconclusive",
@@ -199,6 +206,7 @@ interface CliRun {
   exitCode: number;
   report: {
     grade: string;
+    readiness: Readiness;
     results: Array<{ id: string; status: Status; detail: string }>;
   };
 }
@@ -258,6 +266,10 @@ async function main(): Promise<void> {
         const got = byId.get(id);
         note(got?.status === want, `${id}: expected ${want}, got ${got?.status ?? "MISSING"}`);
       }
+      note(
+        run.report.readiness === exp.readiness,
+        `readiness: expected ${exp.readiness}, got ${run.report.readiness}`,
+      );
       note(run.report.grade === exp.grade, `grade: expected ${exp.grade}, got ${run.report.grade}`);
       note(run.exitCode === exp.exitCode, `exit code: expected ${exp.exitCode}, got ${run.exitCode}`);
 

@@ -11,7 +11,7 @@
  * vehicle, so it is skipped rather than penalized.
  */
 import { rpcErrorCode, rpcResult } from "../client.js";
-import { acquireTransport } from "../probe-transport.js";
+import { getTransport } from "../probe-transport.js";
 import { ERROR, FIX_URLS } from "../spec.js";
 import type { CheckDefinition, CheckStatus } from "../types.js";
 
@@ -62,7 +62,7 @@ export const errorCodes: CheckDefinition = {
   why: "2026-07-28 renumbers resource-not-found to -32602 (Invalid Params); clients built on the new spec key off the new code.",
   fixUrl: FIX_URLS.errorCodes,
   async run(ctx) {
-    const t = await acquireTransport(ctx);
+    const t = await getTransport(ctx);
     if (t.mode === "none") {
       return {
         status: "inconclusive",

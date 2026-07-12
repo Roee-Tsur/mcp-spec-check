@@ -11,7 +11,7 @@
  * header and returns a result, which is exactly the fail signal.
  */
 import { rpcErrorCode, rpcResult } from "../client.js";
-import { acquireTransport } from "../probe-transport.js";
+import { getTransport } from "../probe-transport.js";
 import { ERROR, FIX_URLS, HEADERS } from "../spec.js";
 import type { CheckDefinition, CheckStatus } from "../types.js";
 
@@ -53,7 +53,7 @@ export const routingHeaders: CheckDefinition = {
   why: "Required on every Streamable HTTP request in 2026-07-28; servers must reject header/body mismatches so gateways can route without inspecting the payload.",
   fixUrl: FIX_URLS.routingHeaders,
   async run(ctx) {
-    const t = await acquireTransport(ctx);
+    const t = await getTransport(ctx);
     if (t.mode === "none") {
       return {
         status: "inconclusive",

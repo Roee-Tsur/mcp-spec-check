@@ -8,7 +8,7 @@
  * Revisit at GA (project rule 5 — optional features warn, never fail).
  */
 import { rpcResult } from "../client.js";
-import { acquireTransport } from "../probe-transport.js";
+import { getTransport } from "../probe-transport.js";
 import { CACHE_SCOPES, FIX_URLS } from "../spec.js";
 import type { CheckDefinition, CheckStatus } from "../types.js";
 
@@ -49,7 +49,7 @@ export const cacheMetadata: CheckDefinition = {
   why: "New cache-control metadata on list/read responses (SEP-2549). Optional in mcp-spec-check's grading during the beta — absence is a warn, never a fail.",
   fixUrl: FIX_URLS.cacheMetadata,
   async run(ctx) {
-    const t = await acquireTransport(ctx);
+    const t = await getTransport(ctx);
     if (t.mode === "none") {
       return {
         status: "inconclusive",

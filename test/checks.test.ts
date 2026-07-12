@@ -20,6 +20,18 @@ describe("interpretDiscover", () => {
   it("warn when supportedVersions omits the target", () => {
     expect(interpretDiscover(200, result({ supportedVersions: ["2025-11-25"] })).status).toBe("warn");
   });
+  it("surfaces advertised versions in data on both pass and warn", () => {
+    expect(interpretDiscover(200, result({ supportedVersions: ["2026-07-28", "2025-11-25"] })).data).toEqual({
+      supportedVersions: ["2026-07-28", "2025-11-25"],
+    });
+    expect(interpretDiscover(200, result({ supportedVersions: ["2025-11-25"] })).data).toEqual({
+      supportedVersions: ["2025-11-25"],
+    });
+  });
+  it("omits data when there's no parseable version list", () => {
+    expect(interpretDiscover(200, result({ serverInfo: {} })).data).toBeUndefined();
+    expect(interpretDiscover(404, undefined).data).toBeUndefined();
+  });
   it("inconclusive when the result has no supportedVersions array", () => {
     expect(interpretDiscover(200, result({ serverInfo: {} })).status).toBe("inconclusive");
   });

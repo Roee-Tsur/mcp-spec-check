@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { grade, summarize, exitCode, buildReport } from "../src/report.js";
+import { grade, summarize, exitCode, buildReport, readiness } from "../src/report.js";
 import type { CheckResult, Preflight } from "../src/types.js";
 
 const r = (status: CheckResult["status"]): CheckResult => ({
@@ -8,6 +8,19 @@ const r = (status: CheckResult["status"]): CheckResult => ({
   status,
   detail: "",
 });
+
+/** A result with a specific check id — for readiness, which keys off the required-3 ids. */
+const ri = (id: string, status: CheckResult["status"]): CheckResult => ({
+  id,
+  title: id,
+  status,
+  detail: "",
+});
+const required = (a: CheckResult["status"], b: CheckResult["status"], c: CheckResult["status"]) => [
+  ri("discover", a),
+  ri("routing-headers", b),
+  ri("session-independence", c),
+];
 
 const open: Preflight = { access: "open", baseline: "2025-11-25", detail: "speaks 2025-11-25" };
 const authWalled: Preflight = { access: "auth-required", detail: "HTTP 401" };
@@ -94,10 +107,51 @@ describe("summarize", () => {
   });
 });
 
+describe("readiness", () => {
+  it("ready when all three required checks pass", () => {
+    expect(readiness(required("pass", "pass", "pass"))).toBe("ready");
+  });
+  it("ready even when optional checks warn/fail — required-3 only", () => {
+    expect(readiness([...required("pass", "pass", "pass"), ri("cache-metadata", "warn")])).toBe("ready");
+  });
+  it("not-ready when any required check fails", () => {
+    expect(readiness(required("fail", "pass", "pass"))).toBe("not-ready");
+    expect(readiness(required("pass", "pass", "fail"))).toBe("not-ready");
+  });
+  it("a required fail dominates a required inconclusive", () => {
+    expect(readiness(required("fail", "inconclusive", "pass"))).toBe("not-ready");
+  });
+  it("unknown when a required check is inconclusive (no fails)", () => {
+    expect(readiness(required("pass", "inconclusive", "pass"))).toBe("unknown");
+  });
+  it("unknown when required checks are skipped (auth-walled)", () => {
+    expect(readiness(required("skipped", "skipped", "skipped"))).toBe("unknown");
+  });
+  it("unknown when a required check is warn (e.g. discover works but omits the target)", () => {
+    expect(readiness(required("warn", "pass", "pass"))).toBe("unknown");
+  });
+  it("unknown when a required check is missing entirely", () => {
+    expect(readiness([ri("discover", "pass"), ri("routing-headers", "pass")])).toBe("unknown");
+  });
+});
+
 describe("buildReport", () => {
   it("carries the preflight through to the report", () => {
     const report = buildReport("u", "0", authWalled, [r("skipped")]);
     expect(report.preflight).toEqual(authWalled);
     expect(report.grade).toBe("?");
+  });
+  it("sets readiness on the report", () => {
+    expect(buildReport("u", "0", open, required("pass", "pass", "pass")).readiness).toBe("ready");
+    expect(buildReport("u", "0", open, required("fail", "pass", "pass")).readiness).toBe("not-ready");
+    expect(buildReport("u", "0", authWalled, [r("skipped")]).readiness).toBe("unknown");
+  });
+  it("attaches protocol facts only when provided", () => {
+    expect(buildReport("u", "0", open, required("pass", "pass", "pass")).protocol).toBeUndefined();
+    const withProto = buildReport("u", "0", open, required("pass", "pass", "pass"), {
+      transportMode: "next",
+      declaredVersions: ["2026-07-28"],
+    });
+    expect(withProto.protocol).toEqual({ transportMode: "next", declaredVersions: ["2026-07-28"] });
   });
 });
