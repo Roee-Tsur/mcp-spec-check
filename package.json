@@ -17,11 +17,17 @@
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "typecheck:scan": "tsc --noEmit -p tsconfig.scan.json",
     "refs:install": "npm --prefix ref-servers install",
     "refs:old": "npm --prefix ref-servers run start:old",
     "refs:rc": "npm --prefix ref-servers run start:rc",
     "verify:refs": "tsx scripts/verify-refs.ts",
     "verify:conformance": "npx -y @modelcontextprotocol/conformance@alpha server --url http://127.0.0.1:7102/mcp",
+    "scan:fetch": "tsx scan/fetch-registry.ts",
+    "scan:probe": "tsx scan/probe-all.ts",
+    "scan:aggregate": "tsx scan/aggregate.ts",
+    "scan": "tsx scan/run.ts",
+    "scan:panel": "tsx scan/panel.ts",
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [

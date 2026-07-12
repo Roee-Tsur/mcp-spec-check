@@ -21,7 +21,7 @@ import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-type Status = "pass" | "fail" | "warn" | "todo" | "error" | "skipped";
+type Status = "pass" | "fail" | "warn" | "inconclusive" | "todo" | "error" | "skipped";
 
 type Readiness = "ready" | "not-ready" | "unknown";
 
