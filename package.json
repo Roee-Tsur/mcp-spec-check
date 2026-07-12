@@ -28,6 +28,7 @@
     "scan:aggregate": "tsx scan/aggregate.ts",
     "scan": "tsx scan/run.ts",
     "scan:panel": "tsx scan/panel.ts",
+    "scan:publish": "tsx scan/publish-docs.ts",
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [

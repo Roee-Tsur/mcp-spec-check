@@ -1,0 +1,258 @@
+{
+  "meta": {
+    "toolVersion": "0.2.0",
+    "targetSpec": "2026-07-28",
+    "date": "2026-07-12",
+    "generatedAt": "2026-07-12T09:40:24.589Z",
+    "envelopes": 7850
+  },
+  "funnel": {
+    "totalEntries": 16186,
+    "activeLatest": 16015,
+    "withRemotes": 7707,
+    "remoteUrls": 8073,
+    "junkUrls": 136,
+    "uniqueUrls": 7850,
+    "uniqueHosts": 5549,
+    "byDeclaredType": {
+      "streamable-http": 7243,
+      "sse": 607
+    }
+  },
+  "outcomes": {
+    "ok": 7849,
+    "budgetExceeded": 1,
+    "crash": 0
+  },
+  "access": {
+    "probed": 7849,
+    "open": 4356,
+    "authRequired": 2008,
+    "notMcp": 977,
+    "unreachable": 508
+  },
+  "checkStatusCounts": {
+    "discover": {
+      "pass": 1,
+      "fail": 2773,
+      "warn": 0,
+      "inconclusive": 1581,
+      "todo": 0,
+      "error": 1,
+      "skipped": 0
+    },
+    "routing-headers": {
+      "pass": 4,
+      "fail": 3893,
+      "warn": 7,
+      "inconclusive": 451,
+      "todo": 0,
+      "error": 1,
+      "skipped": 0
+    },
+    "session-independence": {
+      "pass": 2513,
+      "fail": 472,
+      "warn": 0,
+      "inconclusive": 1371,
+      "todo": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "error-codes": {
+      "pass": 1635,
+      "fail": 0,
+      "warn": 121,
+      "inconclusive": 936,
+      "todo": 0,
+      "error": 1,
+      "skipped": 1663
+    },
+    "cache-metadata": {
+      "pass": 6,
+      "fail": 0,
+      "warn": 3883,
+      "inconclusive": 467,
+      "todo": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "mrtr": {
+      "pass": 1,
+      "fail": 0,
+      "warn": 3871,
+      "inconclusive": 484,
+      "todo": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "deprecated-features": {
+      "pass": 3943,
+      "fail": 0,
+      "warn": 278,
+      "inconclusive": 133,
+      "todo": 0,
+      "error": 2,
+      "skipped": 0
+    },
+    "auth-metadata": {
+      "pass": 1939,
+      "fail": 0,
+      "warn": 0,
+      "inconclusive": 0,
+      "todo": 0,
+      "error": 0,
+      "skipped": 2417
+    }
+  },
+  "readiness": {
+    "endpointLevel": {
+      "total": 4356,
+      "ready": 1,
+      "notReady": 3956,
+      "unknown": 399
+    },
+    "hostCollapsed": {
+      "total": 2741,
+      "ready": 1,
+      "notReady": 2408,
+      "unknown": 332
+    }
+  },
+  "versions": {
+    "endpointLevel": {
+      "2025-11-25": 1922,
+      "unknown": 63,
+      "2024-11-05": 498,
+      "2025-03-26": 1470,
+      "2025-11-05": 3,
+      "2025-06-18": 381,
+      "modern-undeclared": 14,
+      "2026-07-28": 5
+    },
+    "hostCollapsed": {
+      "2025-11-25": 1713,
+      "unknown": 63,
+      "2024-11-05": 408,
+      "2025-03-26": 186,
+      "2025-11-05": 3,
+      "2025-06-18": 349,
+      "modern-undeclared": 14,
+      "2026-07-28": 5
+    }
+  },
+  "authWalledRfc9728": {
+    "total": 2008,
+    "withMetadata": 1524,
+    "withoutMetadata": 484
+  },
+  "hostConcentration": {
+    "totalTargets": 7850,
+    "uniqueHosts": 5549,
+    "topHostSharePct": 15.5,
+    "top10SharePct": 23,
+    "topHosts": [
+      {
+        "host": "host-01",
+        "urlCount": 1217,
+        "sharePct": 15.5
+      },
+      {
+        "host": "host-02",
+        "urlCount": 217,
+        "sharePct": 2.8
+      },
+      {
+        "host": "host-03",
+        "urlCount": 99,
+        "sharePct": 1.3
+      },
+      {
+        "host": "host-04",
+        "urlCount": 57,
+        "sharePct": 0.7
+      },
+      {
+        "host": "host-05",
+        "urlCount": 54,
+        "sharePct": 0.7
+      },
+      {
+        "host": "host-06",
+        "urlCount": 38,
+        "sharePct": 0.5
+      },
+      {
+        "host": "host-07",
+        "urlCount": 34,
+        "sharePct": 0.4
+      },
+      {
+        "host": "host-08",
+        "urlCount": 33,
+        "sharePct": 0.4
+      },
+      {
+        "host": "host-09",
+        "urlCount": 30,
+        "sharePct": 0.4
+      },
+      {
+        "host": "host-10",
+        "urlCount": 24,
+        "sharePct": 0.3
+      }
+    ]
+  },
+  "quality": {
+    "inconclusiveRatePctByCheck": {
+      "discover": 36.3,
+      "routing-headers": 10.4,
+      "session-independence": 31.5,
+      "error-codes": 21.5,
+      "cache-metadata": 10.7,
+      "mrtr": 11.1,
+      "deprecated-features": 3.1,
+      "auth-metadata": 0
+    },
+    "errorsByCheck": {
+      "discover": 1,
+      "routing-headers": 1,
+      "session-independence": 0,
+      "error-codes": 1,
+      "cache-metadata": 0,
+      "mrtr": 0,
+      "deprecated-features": 2,
+      "auth-metadata": 0
+    },
+    "budgetExceeded": 1,
+    "crashes": 0,
+    "retried": 522
+  },
+  "tripwires": [
+    {
+      "name": "inconclusive-rate:discover",
+      "tripped": true,
+      "detail": "discover inconclusive on 1581/4356 open servers (36.3% > 30%)",
+      "sampleHashes": [
+        "00211e85e3fbd341",
+        "00256804085f3bd8",
+        "0028007b1019cfcc",
+        "007b3cfdea5b3c6d",
+        "008e770157ff9995"
+      ]
+    },
+    {
+      "name": "inconclusive-rate:session-independence",
+      "tripped": true,
+      "detail": "session-independence inconclusive on 1371/4356 open servers (31.5% > 30%)",
+      "sampleHashes": [
+        "00211e85e3fbd341",
+        "00256804085f3bd8",
+        "0028007b1019cfcc",
+        "008e770157ff9995",
+        "00933b98f080912e"
+      ]
+    }
+  ]
+}

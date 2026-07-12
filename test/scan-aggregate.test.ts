@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregate, newestDemonstratedVersion } from "../scan/aggregate.js";
+import { aggregate, newestDemonstratedVersion, redactHostNames } from "../scan/aggregate.js";
 import { urlHash } from "../scan/paths.js";
 import type { Funnel } from "../scan/registry.js";
 import type { Envelope, ProbeOutcome } from "../scan/types.js";
@@ -136,6 +136,20 @@ describe("aggregate", () => {
 
   it("measures RFC 9728 through the auth wall", () => {
     expect(agg.authWalledRfc9728).toEqual({ total: 2, withMetadata: 1, withoutMetadata: 1 });
+  });
+
+  it("redactHostNames drops identities but keeps shares/counts", () => {
+    const red = redactHostNames(agg);
+    expect(red.hostConcentration.topHosts[0]).toEqual({
+      host: "host-01",
+      urlCount: 3,
+      sharePct: 27.3,
+    });
+    // shares and every non-host number are untouched
+    expect(red.hostConcentration.topHostSharePct).toBe(agg.hostConcentration.topHostSharePct);
+    expect(red.readiness).toEqual(agg.readiness);
+    // no real host name survives anywhere in the redacted top-host list
+    expect(red.hostConcentration.topHosts.some((h) => h.host.includes("."))).toBe(false);
   });
 
   it("reports host concentration without attaching readiness", () => {

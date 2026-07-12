@@ -11,6 +11,10 @@ npx mcp-spec-check https://your-server.com/mcp
 
 The [MCP 2026-07-28 release](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/) is the largest revision of the protocol since launch: the `initialize` handshake and `Mcp-Session-Id` are removed in favor of a stateless core, `Mcp-Method`/`Mcp-Name` routing headers become required, SSE elicitation is replaced by Multi Round-Trip Requests, and error codes change. **Nothing switches off on July 28 itself** — the spec text publishes that day and old protocol versions keep negotiating — but SDKs and clients are moving to the stateless core, and servers that never migrate will be left behind as support windows expire. `mcp-spec-check` black-box-probes your live endpoint — no code access needed — and tells you exactly where you stand, with links to the migration docs.
 
+## The ecosystem scan
+
+We probed **every remote server in the official MCP registry** — all 7,850 of them (2026-07-12). Of the 4,356 we could probe openly, just 1 passes all three required checks and 90.8% aren't ready yet — the migration to the stateless core has barely begun, which is exactly what you'd expect before the spec is even GA. Full writeup with methodology and denominators: **[docs/scan-2026-07.md](docs/scan-2026-07.md)** (committed aggregate: [scan-2026-07.aggregates.json](docs/scan-2026-07.aggregates.json)).
+
 ## What it checks
 
 The report leads with a one-line verdict — **`ready for 2026-07-28: YES / NO / UNKNOWN`** — decided *only* by the three required checks below (`discover`, `routing-headers`, `session-independence`): all three pass → `YES`, any fails → `NO`, otherwise `UNKNOWN`. A letter grade over every check follows as a secondary signal.

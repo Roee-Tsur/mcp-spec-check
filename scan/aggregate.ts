@@ -373,6 +373,25 @@ export function computeTripwires(
   return wires;
 }
 
+/**
+ * Redaction for the PUBLISHED artifact: keep every share/count but drop host
+ * identities (rank-anonymized to host-01…). The local scan-results copy keeps
+ * real names for the operator; only the committed docs/ copy is redacted.
+ */
+export function redactHostNames(agg: Aggregates): Aggregates {
+  return {
+    ...agg,
+    hostConcentration: {
+      ...agg.hostConcentration,
+      topHosts: agg.hostConcentration.topHosts.map((h, i) => ({
+        host: `host-${String(i + 1).padStart(2, "0")}`,
+        urlCount: h.urlCount,
+        sharePct: h.sharePct,
+      })),
+    },
+  };
+}
+
 export function renderSummaryMd(agg: Aggregates): string {
   const L: string[] = [];
   const r = agg.readiness;
