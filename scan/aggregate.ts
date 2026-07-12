@@ -40,24 +40,28 @@ function checkStatus(report: Report, id: string): CheckStatus | undefined {
 
 /**
  * The newest protocol version a server demonstrably speaks, for the histogram.
- * "Demonstrably" is the operative word: a modern-shaped ERROR (e.g. a -32600 to
- * a next-mode probe, which the transport layer optimistically labels "next")
- * is NOT a demonstration — the DeepWiki-style ambiguous servers answer the
- * legacy initialize and -32600 everything else, and crediting them as 2026-07-28
- * would inflate the headline. So the target bucket requires a positive success:
- *  - "2026-07-28"        discover advertised it, OR a session-less next-mode
- *                        request actually returned a result (session-independence
- *                        pass), OR it declared the version
- *  - a legacy date       negotiated via initialize (preflight.baseline)
- *  - "modern-undeclared" spoke next-mode shape but never a successful result and
- *                        named no version (weakest signal, no legacy baseline)
+ * "Demonstrably" means it did something ONLY a 2026-07-28 server does — so the
+ * target bucket requires a distinctive positive signal, not a coincidence:
+ *  - "2026-07-28"        `server/discover` advertised it (discover pass), OR the
+ *                        server enforced the new Mcp-Method routing header
+ *                        (routing-headers pass), OR it declared the version.
+ *  - a legacy date       negotiated via the legacy initialize (preflight.baseline)
+ *  - "modern-undeclared" next-mode shape but never a distinctive success and no
+ *                        legacy baseline (weakest signal)
  *  - "unknown"           nothing observable
+ *
+ * NOT counted as 2026-07-28: `session-independence` pass. Statelessness is not
+ * distinctive — plenty of *old* servers (this scan found 2,511, negotiating
+ * versions as old as 2024-11-05) are stateless and tolerantly ignore the new
+ * _meta/headers, so they answer two session-less requests fine while
+ * implementing none of the required 2026-07-28 surface. Crediting them would
+ * inflate the headline ~500×. They bucket by their real negotiated baseline.
  */
 export function newestDemonstratedVersion(report: Report): string {
   const declared = report.protocol?.declaredVersions ?? [];
   const demonstratedTarget =
     checkStatus(report, "discover") === "pass" ||
-    checkStatus(report, "session-independence") === "pass" ||
+    checkStatus(report, "routing-headers") === "pass" ||
     declared.includes("2026-07-28");
   if (demonstratedTarget) return "2026-07-28";
   if (report.preflight.baseline) return report.preflight.baseline;

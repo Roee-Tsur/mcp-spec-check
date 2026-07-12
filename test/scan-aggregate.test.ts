@@ -65,8 +65,18 @@ describe("newestDemonstratedVersion", () => {
   it("2026-07-28 when discover passed", () => {
     expect(newestDemonstratedVersion(mkReport({ checks: { discover: "pass" } }))).toBe("2026-07-28");
   });
-  it("2026-07-28 when a session-less next-mode request actually returned a result", () => {
-    expect(newestDemonstratedVersion(mkReport({ checks: { discover: "inconclusive", "session-independence": "pass" } }))).toBe("2026-07-28");
+  it("2026-07-28 when the server enforced the new routing header (routing-headers pass)", () => {
+    expect(newestDemonstratedVersion(mkReport({ checks: { discover: "inconclusive", "routing-headers": "pass" } }))).toBe("2026-07-28");
+  });
+  it("does NOT credit 2026-07-28 for an old stateless server that only passes session-independence", () => {
+    // The 2,511-server trap: negotiates an OLD version via initialize, is
+    // coincidentally stateless (session-independence pass), but implements no
+    // distinctive 2026-07-28 surface → buckets to its real baseline.
+    expect(
+      newestDemonstratedVersion(
+        mkReport({ baseline: "2025-03-26", checks: { discover: "fail", "routing-headers": "fail", "session-independence": "pass" } }),
+      ),
+    ).toBe("2025-03-26");
   });
   it("does NOT credit 2026-07-28 for a -32600 ambiguous server (next-transport but no success)", () => {
     // The DeepWiki pattern: legacy initialize (baseline 2025-11-25), everything
