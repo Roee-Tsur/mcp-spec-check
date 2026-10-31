@@ -1,9 +1,10 @@
 /**
- * 2026-07-28 requires the Mcp-Method (and Mcp-Name) routing headers on every
- * Streamable HTTP POST and requires servers to REJECT a request whose header
- * contradicts the body — HTTP 400 + HeaderMismatch (-32020) — so gateways can
- * route on the header without the body lying to them (SEP-2243).
+ * The 2026-07-28 spec requires Mcp-Method on every Streamable HTTP POST.
+ * Mcp-Name is required only for tools/call, resources/read and prompts/get.
+ * Servers must reject a header/body mismatch with HTTP 400 and
+ * HeaderMismatch (-32020), so gateways can trust these headers (SEP-2243).
  *
+ * This probe checks Mcp-Method consistency, not Mcp-Name validation.
  * We send a control request with correct headers, then one whose Mcp-Method
  * deliberately disagrees with the body. A server that accepts the mismatch is
  * not validating routing headers (fail). We probe through the shared transport
@@ -49,8 +50,8 @@ export function interpretRoutingProbes(
 
 export const routingHeaders: CheckDefinition = {
   id: "routing-headers",
-  title: "Mcp-Method / Mcp-Name routing headers validated",
-  why: "Required on every Streamable HTTP request in 2026-07-28; servers must reject header/body mismatches so gateways can route without inspecting the payload.",
+  title: "Mcp-Method routing header validation",
+  why: "Mcp-Method is required on each modern Streamable HTTP POST; this check verifies rejection of a mismatched method header. Mcp-Name is required only on named calls.",
   fixUrl: FIX_URLS.routingHeaders,
   async run(ctx) {
     const t = await getTransport(ctx);

@@ -28,7 +28,7 @@ A check the server answers too ambiguously to judge is marked `inconclusive` and
 | Check | What it means |
 | --- | --- |
 | `discover` | `server/discover` replaces the initialize handshake; servers must implement it |
-| `routing-headers` | `Mcp-Method` / `Mcp-Name` are required on every request so gateways can route |
+| `routing-headers` | Checks that the server rejects a mismatched `Mcp-Method` header. `Mcp-Method` is required on every Streamable HTTP POST; `Mcp-Name` is required only for `tools/call`, `resources/read`, and `prompts/get`. |
 | `session-independence` | Protocol-level sessions are removed; session-pinned servers cannot serve the stateless core behind load balancers |
 | `error-codes` | (warn) resource-not-found renumbers from `-32002` to `-32602` |
 | `cache-metadata` | (warn) new `ttlMs` / `cacheScope` caching metadata on list/read results |
